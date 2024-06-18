@@ -11,7 +11,7 @@ verify_ssl = true
 [packages]
 apscheduler = "*"
 dash-bootstrap-components = "*"
-dash = ">=2.0,<2.10"
+dash = ">=2.0,<2.16"
 django = "*"
 django-admin-list-filter-dropdown = "*"
 django-admin-relation-links = "*"
