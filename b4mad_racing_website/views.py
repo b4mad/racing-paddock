@@ -13,6 +13,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
 
+# we need to import these to make sure the apps are registered
+import b4mad_racing_website.fastlap_app  # noqa: F401
+import b4mad_racing_website.pitcrew_app  # noqa: F401
 from telemetry.models import Car, Coach, Driver, Game, Lap, Session, Track
 from telemetry.racing_stats import RacingStats
 
