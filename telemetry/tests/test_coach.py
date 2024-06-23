@@ -87,7 +87,7 @@ class TestCoach(TransactionTestCase):
         # get the fast lap for the driver
         fast_lap.refresh_from_db()
         driver_segments = fast_lap.data["segments"]
-        self.assertEqual(len(driver_segments), 8)
+        self.assertEqual(len(driver_segments), 9)
         self.assertEqual(len(driver_segments[1].live_features["brake"]), 16)
 
     def test_track_guide(self):

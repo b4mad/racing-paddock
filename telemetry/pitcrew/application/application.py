@@ -24,8 +24,11 @@ class Application(LoggingMixin):
         for segment in self.history.segments:
             self.segments_by_turn[segment.turn] = segment
         self.init_distance_to_segment()
-        self.ready = False
+        self._ready = False
         self.init()
+
+    def ready(self):
+        return self.ready
 
     def init_distance_to_segment(self):
         self.distance_to_segment = {}

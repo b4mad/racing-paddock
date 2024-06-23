@@ -53,5 +53,16 @@
       "game": 1,
       "car_class": null
     }
+  },
+  {
+    "model": "telemetry.car",
+    "pk": 4034,
+    "fields": {
+      "created": "2023-12-26T11:01:28.820Z",
+      "modified": "2023-12-26T11:01:28.820Z",
+      "name": "Mitsubishi Lancer Evo X R4",
+      "game": 15,
+      "car_class": null
+    }
   }
 ]

@@ -9,7 +9,7 @@ class BrakeApplication(Application):
         if self.game.name != "Richard Burns Rally":
             # self.send_response("Brake copilot is not available for Richard Burns Rally")
             self.send_response("This is your brake copilot speaking")
-            self.ready = True
+            self._ready = True
 
     def init_messages(self):
         self.messages = {}
