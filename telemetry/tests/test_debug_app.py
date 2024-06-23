@@ -27,7 +27,7 @@ class TestDebugApp(TransactionTestCase):
     ]
     maxDiff = None
 
-    do_save_responses = False
+    do_save_responses = True
 
     def test_debug(self):
         # iRacing / Mazda MX-5 Cup / okayama short

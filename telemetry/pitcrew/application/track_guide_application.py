@@ -152,7 +152,7 @@ class TrackGuideApplication(Application):
         else:
             self.send_response("Let's start the track guide.")
             self.init_turns()
-            self.ready = True
+            self._ready = True
 
     def init_turns(self):
         for note in self.track_guide.notes.all():

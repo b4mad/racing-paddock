@@ -37,5 +37,18 @@
     "long_description": "Before the brakepoint he'll say something like `30 percent`, which means to apply 30 percent brake pressure at the brakepoint.\r\n\r\nRight at the brakepoint, he'll just say `brake`.\r\n\r\nFor turns where you justs `lift` the throttle, you'll hear how much you have to lift.",
     "published": "2023-12-23T22:04:02Z"
   }
+},
+{
+  "model": "b4mad_racing_website.copilot",
+  "pk": 4,
+  "fields": {
+    "created": "2023-12-23T22:04:03.687Z",
+    "modified": "2023-12-25T10:19:12.235Z",
+    "slug": "commentator",
+    "name": "Commentator",
+    "description": "will comment on before the session",
+    "long_description": "He'll tell you about your car before the session starts.",
+    "published": "2023-12-23T22:04:02Z"
+  }
 }
 ]

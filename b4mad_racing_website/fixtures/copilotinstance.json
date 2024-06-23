@@ -31,5 +31,16 @@
       "copilot": 3,
       "status": "CONFIGURED"
     }
+  },
+  {
+    "model": "b4mad_racing_website.copilotinstance",
+    "pk": "98ffee88-a12f-4b90-9ba2-b7ca235e072b",
+    "fields": {
+      "created": "2023-12-23T22:30:49.697Z",
+      "modified": "2023-12-23T22:30:49.697Z",
+      "driver": 7,
+      "copilot": 4,
+      "status": "CONFIGURED"
+    }
   }
 ]
