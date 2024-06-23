@@ -67,6 +67,8 @@ pytest-django = "*"
 sops2sealedsecret = {version = "*", index = "codeberg"}
 types-python-dateutil = "*"
 types-toml = "*"
+pytest-recording = "*"
+vcrpy = "*"
 
 [requires]
 python_version = "3.10"

@@ -7,6 +7,7 @@ from telemetry.models import Coach, SessionType
 from telemetry.pitcrew.logging_mixin import LoggingMixin
 
 from .application.brake_application import BrakeApplication
+from .application.commentator_application import CommentatorApplication
 from .application.debug_application import DebugApplication
 from .application.session import Session
 from .application.track_guide_application import TrackGuideApplication
@@ -108,6 +109,8 @@ class CoachCopilots(LoggingMixin):
                     self.add_copilot(TrackGuideApplication)
                 elif copilot.slug == "braker":
                     self.add_copilot(BrakeApplication)
+                elif copilot.slug == "commentator":
+                    self.add_copilot(CommentatorApplication)
 
     def add_copilot(self, copilot_klass):
         copilot = copilot_klass(self.session, self.history, self)

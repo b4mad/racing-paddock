@@ -2,6 +2,7 @@
 
 set -x
 cd "$(dirname "$0")/.."
+pwd
 
 models="game car track sessiontype session driver coach fastlap fastlapsegment lap trackguide trackguidenote landmark"
 # models="trackguide trackguidenote"
@@ -12,7 +13,7 @@ for o in $models; do
 done
 
 models="copilot copilotinstance profile"
-models=""
+models="copilot"
 for o in $models; do
-  pipenv run ./manage.py dumpdata --indent 2 b4mad_racing_website.$o > b4mad_racing_website/fixtures.all/$o.json
+  pipenv run ./manage.py dumpdata --indent 2 b4mad_racing_website.$o > b4mad_racing_website/fixtures/$o.json
 done
