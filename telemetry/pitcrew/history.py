@@ -76,8 +76,20 @@ class History(LoggingMixin):
         try:
             self.driver = Driver.objects.get(name=self.filter["Driver"])
             self.game = Game.objects.get(name=self.filter["GameName"])
-            self.car = self.game.cars.get(name=self.filter["CarModel"])
-            self.track = self.game.tracks.get(name=self.filter["TrackCode"])
+
+            # Get or create car
+            self.car, car_created = self.game.cars.get_or_create(name=self.filter["CarModel"])
+            if car_created:
+                self.log_debug(f"Created new car: {self.car.name}")
+
+            # Get or create track
+            self.track, track_created = self.game.tracks.get_or_create(name=self.filter["TrackCode"])
+            if track_created:
+                self.log_debug(f"Created new track: {self.track.name}")
+                # Set a default track length if it's a new track
+                self.track.length = 10  # Default length in meters
+                self.track.save()
+
             self.track_length = self.track.length
         except Exception as e:
             error = f"Error init {self.filter['Driver']} / {self.filter['GameName']}"
@@ -92,20 +104,37 @@ class History(LoggingMixin):
                 return True
 
     def init_segments(self) -> bool:
-        """Load the segments from DB."""
+        """Load the segments from DB or create a new FastLap if none exists."""
         fast_lap = FastLap.objects.filter(track=self.track, car=self.car, game=self.game).first()
-        if not fast_lap or not fast_lap.data or not fast_lap.data.get("segments"):
-            error = f"no data found for game {self.filter['GameName']}"
-            error += f" on track {self.filter['TrackCode']}"
-            error += f" in car {self.filter['CarModel']}"
-            self._error = error
-            self.log_error(error)
-            return False
 
-        self.log_debug("loading segments for %s %s - %s", self.game, self.track, self.car)
-        self.log_debug(f"  based on laps {fast_lap.laps.count()}")
+        if not fast_lap:
+            self.log_debug(f"No FastLap found. Creating a new one for {self.game} {self.track} {self.car}")
+            fast_lap = FastLap.objects.create(
+                track=self.track,
+                car=self.car,
+                game=self.game,
+                data={"segments": [], "lap_ids": [], "distance_time": pd.DataFrame()},
+            )
+
+        if not fast_lap.data or not fast_lap.data.get("segments"):
+            self.log_debug("FastLap found but no segments data. Initializing empty segments.")
+            fast_lap.data = {"segments": []}
+            fast_lap.save()
+
+        self.log_debug(f"Loading segments for {self.game} {self.track} - {self.car}")
+        self.log_debug(f"Based on laps {fast_lap.laps.count()}")
 
         self.segments = fast_lap.data.get("segments")
+
+        if not self.segments:
+            self.log_debug("No segments found. Creating a default segment.")
+            default_segment = Segment()
+            default_segment.turn = "Default"
+            default_segment.start = 0
+            default_segment.end = self.track_length
+            self.segments = [default_segment]
+            fast_lap.data["segments"] = [default_segment]
+            fast_lap.save()
 
         for i, segment in enumerate(self.segments):
             next_index = (i + 1) % len(self.segments)
@@ -118,7 +147,7 @@ class History(LoggingMixin):
 
         self.build_lookup_tables()
 
-        # self.log_debug("loaded %s segments", len(self.segments))
+        self.log_debug(f"Loaded {len(self.segments)} segments")
         return True
 
     def init_driver(self):
@@ -236,6 +265,9 @@ class History(LoggingMixin):
     def build_lookup_tables(self):
         """Build lookup tables for fast lap data."""
         df = self.fast_lap.data.get("distance_time")
+        if not isinstance(df, pd.DataFrame):
+            self.log_error("no distance_time in fast lap data")
+            return
         # df is a pandas dataframe with CurrentLapTime, SpeedMs and DistanceRoundTrack as columns
         # 1. round DistanceRoundTrack to integer
         # 2. create a dictionary with DistanceRoundTrack as key and SpeedMs as value
