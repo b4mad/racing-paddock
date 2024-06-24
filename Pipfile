@@ -57,6 +57,7 @@ kubernetes = "*"
 async-timeout = "*"
 python3-openid = "*"
 elevenlabs = "*"
+django-hijack = "*"
 
 [dev-packages]
 black = "*"

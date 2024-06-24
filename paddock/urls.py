@@ -14,6 +14,7 @@ urlpatterns = [
     path("", include("django_prometheus.urls")),
     path("", include("api.urls")),
     path("admin/", admin.site.urls),
+    path("hijack/", include("hijack.urls")),
     path("accounts/", include("allauth.urls")),
     path("explorer/", include("explorer.urls")),
     path("django_plotly_dash/", include("django_plotly_dash.urls")),

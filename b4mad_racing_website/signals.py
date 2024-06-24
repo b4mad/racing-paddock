@@ -30,7 +30,9 @@ def profile_copilot_enabled(sender, **kwargs):  # pylint: disable=unused-argumen
         copilot_instance = b4mad_racing_website.models.CopilotInstance(driver=profile, copilot_id=copilot)
         if profile.mqtt_drivername != "":
             copilot_instance.mqtt_drivername = profile.mqtt_drivername
-            copilot_instance.status = b4mad_racing_website.models.CopilotInstance.Status.CONFIGURED
+            copilot_instance.status = b4mad_racing_website.models.CopilotInstance.Status.ENABLED
+        else:
+            copilot_instance.status = b4mad_racing_website.models.CopilotInstance.Status.MISCONFIGURED
         copilot_instance.save()
         logger.debug("profile_subscription_receiver: created copilot_instance: %s", copilot_instance)
     except KeyError:

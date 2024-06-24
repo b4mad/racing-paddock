@@ -100,7 +100,7 @@ class CoachCopilots(LoggingMixin):
         # where the mqtt_drivername on the driver relation matches self.driver_name
         copilot_instances = CopilotInstance.objects.filter(driver__mqtt_drivername=self.driver_name)
         for copilot_instance in copilot_instances:
-            if copilot_instance.enabled() or True:
+            if copilot_instance.enabled():
                 copilot = copilot_instance.copilot
                 self.log_debug(f"adding copilot: {copilot}")
                 if copilot.slug == "debug":

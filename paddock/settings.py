@@ -86,6 +86,8 @@ INSTALLED_APPS = [
     "b4mad_racing_website.apps.B4madRacingWebsiteConfig",
     "api.apps.ApiConfig",
     "markdown_deux",
+    "hijack",
+    "hijack.contrib.admin",
 ]
 
 MIDDLEWARE = [
@@ -102,6 +104,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "hijack.middleware.HijackUserMiddleware",
 ]
 
 ROOT_URLCONF = "paddock.urls"

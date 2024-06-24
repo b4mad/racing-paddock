@@ -13,7 +13,11 @@ class KubeCrew:
         try:
             kubeconfig.load_kube_config()
         except kubeconfig.config_exception.ConfigException:
-            kubeconfig.load_incluster_config()
+            try:
+                kubeconfig.load_incluster_config()
+            except kubeconfig.config_exception.ConfigException as e:
+                logging.error(f"Could not load kubeconfig: {e}")
+                return
 
         # get the namespace from the environment
         self.namespace = os.environ.get("POD_NAMESPACE", "b4mad-racing")
