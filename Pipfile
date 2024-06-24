@@ -57,6 +57,7 @@ kubernetes = "*"
 async-timeout = "*"
 python3-openid = "*"
 elevenlabs = "*"
+# django-timescaledb = {git = "git+https://github.com/lynxx-apac/django-timescaledb.git#egg=django-timescaledb"}
 django-hijack = "*"
 
 [dev-packages]

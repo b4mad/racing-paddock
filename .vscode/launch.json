@@ -252,6 +252,7 @@
                 // "telemetry.tests.test_session",
                 // "telemetry.tests.test_session.TestSession.test_rbr",
                 // "telemetry.tests.test_session.TestSession.test_ac",
+                // "telemetry.tests.test_timescaledb",
                 // "telemetry.tests.test_session_streaming",
                 // "telemetry.tests.test_fast_lap_analyzer.TestFastLapAnalyser.test_analyze",
             ],

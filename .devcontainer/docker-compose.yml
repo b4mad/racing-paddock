@@ -20,9 +20,11 @@ services:
 
   db:
     image: postgres:latest
+    # image: timescale/timescaledb:latest-pg14
     restart: unless-stopped
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+    # dont store data in a volume, we dont want to persist data between rebuilds
+    # volumes:
+    #   - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
@@ -31,5 +33,35 @@ services:
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
-volumes:
-  postgres-data:
+  telegraf:
+    # platform: linux/x86_64
+    image: telegraf:1.30
+    # env_file: configuration.env
+    environment:
+      - HOSTNAME=telegraf
+      - USERNAME=crewchief
+      - PASSWORD=crewchief
+    volumes:
+    - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - db
+      - mosquitto-mqtt
+    ports:
+    - '8125:8125/udp'
+
+  mosquitto-mqtt:
+    # platform: linux/x86_64
+    # container_name: mosquitto
+    image: eclipse-mosquitto:2
+    user: "0"
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      # - ./mosquitto/data:/mosquitto/data
+      # - ./mosquitto/logs:/mosquitto/logs
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto.passwords:/mosquitto/password/passwords
+
+# volumes:
+#   postgres-data:

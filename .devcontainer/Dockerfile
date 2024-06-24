@@ -6,6 +6,9 @@ ENV PYTHONUNBUFFERED 1
 # COPY requirements.txt /tmp/pip-tmp/
 # RUN pip3 --disable-pip-version-check --no-cache-dir install -r /tmp/pip-tmp/requirements.txt \
 #    && rm -rf /tmp/pip-tmp
+# not sure if this is works as expected
+#COPY Pipfile Pipfile.lock /tmp/pip-tmp/
+#RUN cd /tmp/pip-tmp && pipenv install --dev && rm -rf /tmp/pip-tmp
 
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \

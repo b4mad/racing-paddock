@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+sudo apt-get update
+sudo apt-get install -y mosquitto-clients
 pipenv install --dev
 pipenv run ./manage.py migrate
 pipenv run ./manage.py loaddata driver game fastlap fastlapsegment landmark lap session sessiontype track trackguide trackguidenote coach car copilot copilotinstance profile user

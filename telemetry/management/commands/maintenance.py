@@ -4,7 +4,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from telemetry.influx import Influx
-from telemetry.models import FastLap, Lap, Session
+from telemetry.models import FastLap, Lap, Session, Telemetry
 from telemetry.pitcrew.segment import Segment
 
 
@@ -59,9 +59,15 @@ class Command(BaseCommand):
             action="store_true",
         )
 
+        parser.add_argument(
+            "--dump-session",
+            help="dump session",
+            action="store_true",
+        )
+
     def handle(self, *args, **options):
-        self.influx = Influx()
         if options["delete_influx"]:
+            self.influx = Influx()
             self.delete_influx(options["start"], options["end"])
         elif options["delete_sessions"]:
             self.delete_sessions(options["start"], options["end"])
@@ -71,6 +77,13 @@ class Command(BaseCommand):
             self.fix_fastlaps_data()
         elif options["fix_fastlaps"]:
             self.fix_fastlaps()
+        elif options["dump_session"]:
+            self.dump_session()
+
+    def dump_session(self):
+        # session_id = "1689266594"
+        query_set = Telemetry.timescale.time_bucket("time", "1 hour").values("time", "session_id_telemetry")
+        print(query_set)
 
     def fix_fastlaps(self):
         """

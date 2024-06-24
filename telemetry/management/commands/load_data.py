@@ -11,8 +11,10 @@ from pydub import AudioSegment
 # from telemetry.factories import DriverFactory
 from telemetry.management.commands.rbr_roadbook import NoteMapper, Roadbook
 from telemetry.models import Game, Landmark, TrackGuide
+from telemetry.mqtt import MqttPublisher
 
 # from django.db import transaction
+from telemetry.tests.utils import get_session_df
 
 
 class Command(BaseCommand):
@@ -23,6 +25,7 @@ class Command(BaseCommand):
         parser.add_argument("--landmarks-rbr", nargs="?", type=str)
         parser.add_argument("--tts", action="store_true")
         parser.add_argument("--track-guide", nargs="?", type=str)
+        parser.add_argument("--session", action="store_true")
 
     def handle(self, *args, **options):
         if options["landmarks"]:
@@ -33,6 +36,17 @@ class Command(BaseCommand):
             self.generate_tts()
         if options["landmarks_rbr"]:
             self.rbr_roadbook(options["landmarks_rbr"])
+        if options["session"]:
+            self.session()
+
+    def session(self):
+        mqtt = MqttPublisher()
+        session_id = "1703706617"
+        session_df = get_session_df(session_id)
+
+        for index, row in session_df.iterrows():
+            row = row.to_dict()
+            mqtt.publish_df_dict(row)
 
     def generate_tts(self):
         client = OpenAI()
