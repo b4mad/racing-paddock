@@ -102,7 +102,6 @@ class CoachCopilots(LoggingMixin):
         for copilot_instance in copilot_instances:
             if copilot_instance.enabled():
                 copilot = copilot_instance.copilot
-                self.log_debug(f"adding copilot: {copilot}")
                 if copilot.slug == "debug":
                     self.add_copilot(DebugApplication)
                 elif copilot.slug == "track_guide":
@@ -115,11 +114,13 @@ class CoachCopilots(LoggingMixin):
     def add_copilot(self, copilot_klass):
         copilot = copilot_klass(self.session, self.history, self)
         if copilot.ready:
+            self.log_debug(f"adding copilot: {copilot}")
             self.apps.append(copilot)
         else:
             self.log_debug(f"copilot {copilot} not ready")
-            for response in copilot.yield_responses():
-                self.respond(response)
+
+        for response in copilot.yield_responses():
+            self.respond(response)
 
     def respond(self, response):
         self.responses.append(response)

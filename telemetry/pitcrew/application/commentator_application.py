@@ -9,7 +9,3 @@ class CommentatorApplication(Application):
 
     def notify(self, distance, telemetry, now):
         pass
-
-    def yield_responses(self):
-        while self.responses:
-            yield self.responses.pop(0)

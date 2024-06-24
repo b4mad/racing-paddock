@@ -266,7 +266,11 @@ class History(LoggingMixin):
         """Build lookup tables for fast lap data."""
         df = self.fast_lap.data.get("distance_time")
         if not isinstance(df, pd.DataFrame):
-            self.log_error("no distance_time in fast lap data")
+            self.log_error("no distance_time in fast lap data, building default lookup tables")
+            self.map_distance_speed = {1: 1}
+            self.map_distance_time = {1: 1}
+            self.map_time_distance = {1: 1}
+            self.map_time_distance_max = max(self.map_time_distance.keys())
             return
         # df is a pandas dataframe with CurrentLapTime, SpeedMs and DistanceRoundTrack as columns
         # 1. round DistanceRoundTrack to integer
