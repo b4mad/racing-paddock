@@ -61,7 +61,7 @@ class CoachCopilots(LoggingMixin):
         self.topic = topic
         filter = self.filter_from_topic(topic)
         self.session_id = filter["SessionId"]
-        self.session_type = SessionType.objects.get_or_create(type=filter["SessionType"])
+        self.session_type = SessionType.objects.get_or_create(type=filter["SessionType"])[0]
         self.log_debug("new session %s", topic)
         self.coach_model.refresh_from_db()
         if self.coach_model.enabled is False:
