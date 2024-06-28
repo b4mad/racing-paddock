@@ -29,19 +29,18 @@ class TTS:
         audio = self.client.generate(text=text, voice=voice, model=model, output_format=format)
         return audio
 
-    def create_sound_clip(self, text, subtitle=None, voice="Josh", model="eleven_monolingual_v1"):
+    def create_sound_clip(self, text, voice="Josh", model="eleven_monolingual_v1"):
         """
         Create a SoundClip model instance with generated audio.
 
         :param text: The text to convert to speech
-        :param subtitle: The subtitle for the SoundClip (defaults to the text if not provided)
         :param voice: The voice to use for text-to-speech (default: "Josh")
         :param model: The model to use for text-to-speech (default: "eleven_monolingual_v1")
         :return: The created SoundClip instance
         """
         audio = self.client.generate(text=text, voice=voice, model=model)
 
-        sound_clip = SoundClip(subtitle=subtitle or text, voice=voice, model=model)
+        sound_clip = SoundClip(subtitle=text, voice=voice, model=model)
 
         if isinstance(audio, Iterator):
             audio = b"".join(audio)

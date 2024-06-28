@@ -36,4 +36,24 @@ class TestTts(TransactionTestCase):
 
         assert result.startswith(b"\xff\xf3")
 
+    def test_create_sound_clip(self):
+        if not api_key:
+            return
+
+        # Prepare test data
+        text = "This is a test sound clip."
+
+        # Call the method
+        sound_clip = self.tts_instance.create_sound_clip(text)
+
+        # Assertions
+        self.assertIsNotNone(sound_clip)
+        self.assertEqual(sound_clip.voice, "Josh")
+        self.assertEqual(sound_clip.model, "eleven_monolingual_v1")
+        self.assertTrue(sound_clip.audio_file.name.endswith('.mp3'))
+        self.assertGreater(sound_clip.audio_file.size, 0)
+
+        # Clean up
+        sound_clip.audio_file.delete()
+        sound_clip.delete()
 
