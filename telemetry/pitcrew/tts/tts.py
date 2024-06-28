@@ -2,7 +2,8 @@ import os
 from typing import Iterator
 
 from django.core.files.base import ContentFile
-from elevenlabs import save
+
+# from elevenlabs import save
 from elevenlabs.client import ElevenLabs
 
 from telemetry.models import SoundClip
@@ -36,8 +37,14 @@ class TTS:
         :param text: The text to convert to speech
         :param voice: The voice to use for text-to-speech (default: "Josh")
         :param model: The model to use for text-to-speech (default: "eleven_monolingual_v1")
-        :return: The created SoundClip instance
+        :return: The created or existing SoundClip instance
         """
+        # Check if a SoundClip already exists
+        existing_clip = SoundClip.objects.filter(subtitle=text, voice=voice, model=model).first()
+        if existing_clip:
+            return existing_clip
+
+        # If no existing clip, generate new audio
         audio = self.client.generate(text=text, voice=voice, model=model)
 
         sound_clip = SoundClip(subtitle=text, voice=voice, model=model)
@@ -46,9 +53,7 @@ class TTS:
             audio = b"".join(audio)
 
         # Save the audio content to the FileField
-        sound_clip.audio_file.save(f"{voice}_{text[:30]}.mp3", ContentFile(audio), save=False)
+        sound_clip.audio_file.save(f"{text[:30]}.mp3", ContentFile(audio), save=False)
         sound_clip.save()
 
         return sound_clip
-
-

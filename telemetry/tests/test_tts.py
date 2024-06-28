@@ -1,5 +1,4 @@
 import os
-import tempfile
 from typing import Iterator
 
 from django.test import TransactionTestCase
@@ -50,10 +49,9 @@ class TestTts(TransactionTestCase):
         self.assertIsNotNone(sound_clip)
         self.assertEqual(sound_clip.voice, "Josh")
         self.assertEqual(sound_clip.model, "eleven_monolingual_v1")
-        self.assertTrue(sound_clip.audio_file.name.endswith('.mp3'))
+        self.assertTrue(sound_clip.audio_file.name.endswith(".mp3"))
         self.assertGreater(sound_clip.audio_file.size, 0)
 
         # Clean up
-        sound_clip.audio_file.delete()
-        sound_clip.delete()
-
+        # sound_clip.audio_file.delete()
+        # sound_clip.delete()

@@ -121,7 +121,9 @@ class Application(LoggingMixin):
                 finish_at=finish_at,
             )
         else:
-            response = message.copy()
+            # not sure why we want to copy
+            # response = message.copy()
+            response = message
         self.responses.append(response)
         return response
 

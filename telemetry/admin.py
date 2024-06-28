@@ -13,6 +13,7 @@ from .models import (
     Lap,
     Session,
     SessionType,
+    SoundClip,
     Track,
     TrackGuide,
     TrackGuideNote,
@@ -150,3 +151,4 @@ admin.site.register(Coach, CoachAdmin)
 admin.site.register(Landmark, LandmarkAdmin)
 admin.site.register(TrackGuide, TrackGuideAdmin)
 admin.site.register(TrackGuideNote, TrackGuideNoteAdmin)
+admin.site.register(SoundClip)

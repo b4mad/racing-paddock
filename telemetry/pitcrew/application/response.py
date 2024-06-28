@@ -1,3 +1,8 @@
+from telemetry.pitcrew.tts import TTS
+
+# from django.contrib.sites.models import Site
+
+
 class Response:
     MESSAGE = "message"
     PRIORITY = "priority"
@@ -59,3 +64,30 @@ class Response:
 class ResponseInstant(Response):
     def __init__(self, message, **kwargs):
         super().__init__(message, **kwargs)
+
+
+class ResponseTts(Response):
+    def __init__(self, message, **kwargs):
+        super().__init__(message, **kwargs)
+        self.sound_clip = None
+
+    def create_sound_clip(self):
+        from django.conf import settings
+
+        tts = TTS()
+        self.sound_clip = tts.create_sound_clip(self.message)
+        # domain = Site.objects.get_current().domain
+        # if development protocol is http
+        # protocol = "https://"
+        if settings.DEBUG:
+            protocol = "http://"
+            domain = "localhost:8000"
+        else:
+            protocol = "https://"
+            domain = "b4mad.racing"
+        self.message = f"{protocol}{domain}{self.sound_clip.audio_file.url}"
+
+    def response(self):
+        if not self.sound_clip:
+            self.create_sound_clip()
+        return super().response()

@@ -1,4 +1,5 @@
 import json
+import time
 
 import django.utils.timezone
 
@@ -60,7 +61,7 @@ class CoachCopilots(LoggingMixin):
         self.topic = topic
         filter = self.filter_from_topic(topic)
         self.session_id = filter["SessionId"]
-        self.session_type = SessionType.objects.get(type=filter["SessionType"])
+        self.session_type = SessionType.objects.get_or_create(type=filter["SessionType"])
         self.log_debug("new session %s", topic)
         self.coach_model.refresh_from_db()
         if self.coach_model.enabled is False:
@@ -69,19 +70,24 @@ class CoachCopilots(LoggingMixin):
 
     def ready(self):
         if self._new_session_starting:
-            if not self.history.is_ready():
-                if self.history.is_initializing():
+            start_time = time.time()
+            while not self.history.is_ready():
+                if time.time() - start_time > 60:  # 1 minute timeout
+                    self.log_debug("History not ready after 1 minute, timing out")
                     return False
 
-                error = self.history.get_and_reset_error()
+                if self.history.is_initializing():
+                    time.sleep(0.5)
+                    continue
 
+                error = self.history.get_and_reset_error()
                 if error:
-                    # Don't respond to the client, just store the error, the copilot can report it
-                    # self.respond(ResponseInstant(error))
                     self.coach_model.error = error
                     self.coach_model.save()
+                    return False
 
-                return False
+                time.sleep(0.5)
+
             # History is ready
             self.init_apps()
             self._new_session_starting = False
@@ -166,7 +172,8 @@ class CoachCopilots(LoggingMixin):
             return
 
         if self.topic != topic:
-            self.previous_distance = int(telemetry["DistanceRoundTrack"])
+            # self.previous_distance = int(telemetry["DistanceRoundTrack"])
+            self.previous_distance = -1
             self.previous_delta = 0
             self.new_session(topic)
 

@@ -114,6 +114,7 @@ class Mqtt:
 
     def run(self):
         self.mqttc.connect(B4MAD_RACING_MQTT_HOST, B4MAD_RACING_MQTT_PORT, 60)
+        _LOGGER.info("Connecting to %s:%s", B4MAD_RACING_MQTT_HOST, B4MAD_RACING_MQTT_PORT)
         # topic = f"crewchief/{self.driver}/#"
         if self.replay:
             self.topic = f"replay/{self.topic}"
