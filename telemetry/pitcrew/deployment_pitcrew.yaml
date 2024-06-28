@@ -73,3 +73,6 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 256Mi
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: paddock-media-pvc
