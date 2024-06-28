@@ -1,4 +1,5 @@
 import os
+from typing import Iterator
 
 from django.core.files.base import ContentFile
 from elevenlabs import save
@@ -15,18 +16,18 @@ class TTS:
 
         self.client = ElevenLabs(api_key=self.api_key)
 
-    def generate_mp3(self, text, output_path):
+    def generate_mp3(self, text, voice="Josh", model="eleven_monolingual_v1"):
         """
-        Generate an MP3 file from the given text using ElevenLabs API.
+        Generate MP3 audio data from the given text using ElevenLabs API.
 
         :param text: The text to convert to speech
-        :param output_path: The path where the MP3 file should be saved
-        :return: The path to the generated MP3 file
+        :param voice: The voice to use for text-to-speech (default: "Josh")
+        :param model: The model to use for text-to-speech (default: "eleven_monolingual_v1")
+        :return: The generated audio data as bytes
         """
-        audio = self.client.generate(text=text, voice="Josh", model="eleven_monolingual_v1")
-
-        save(audio, output_path)
-        return output_path
+        format = "mp3_22050_32"
+        audio = self.client.generate(text=text, voice=voice, model=model, output_format=format)
+        return audio
 
     def create_sound_clip(self, text, subtitle=None, voice="Josh", model="eleven_monolingual_v1"):
         """
@@ -42,8 +43,13 @@ class TTS:
 
         sound_clip = SoundClip(subtitle=subtitle or text, voice=voice, model=model)
 
+        if isinstance(audio, Iterator):
+            audio = b"".join(audio)
+
         # Save the audio content to the FileField
         sound_clip.audio_file.save(f"{voice}_{text[:30]}.mp3", ContentFile(audio), save=False)
         sound_clip.save()
 
         return sound_clip
+
+

@@ -1,5 +1,6 @@
 import os
 import tempfile
+from typing import Iterator
 
 from django.test import TransactionTestCase
 
@@ -21,15 +22,18 @@ class TestTts(TransactionTestCase):
             # pytest.skip("ELEVENLABS_API_KEY not set in environment")
             return
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            # Prepare test data
-            text = "Hello, this is a test."
-            output_path = os.path.join(tmp_dir, "test_output.mp3")
+        # Prepare test data
+        text = "Hello, this is a test."
 
-            # Call the method
-            result = self.tts_instance.generate_mp3(text, str(output_path))
+        # Call the method
+        result = self.tts_instance.generate_mp3(text)
 
-            # Assertions
-            assert result == str(output_path)
-            assert os.path.exists(output_path)
-            assert os.path.getsize(output_path) > 0
+        # Assertions
+        assert isinstance(result, Iterator)
+
+        if isinstance(result, Iterator):
+            result = b"".join(result)
+
+        assert result.startswith(b"\xff\xf3")
+
+
