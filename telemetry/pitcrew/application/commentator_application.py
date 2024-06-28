@@ -11,6 +11,14 @@ class CommentatorApplication(Application):
             message = ResponseTts(txt)
             self.send_response(message)
 
+            track = self.session.track
+            txt = f"{track}"
+            message = ResponseTts(txt)
+            self.send_response(message)
+
+            message = ResponseTts("Let's go!")
+            self.send_response(message)
+
     def notify(self, distance, telemetry, now):
         # self.log_debug(f"notify: {distance} {telemetry}")
         pass
