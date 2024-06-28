@@ -278,3 +278,13 @@ class TrackGuideNote(TimeStampedModel):
     def __str__(self):
         repr = f"{self.segment or self.landmark} - at {self.at or self.finish_at}: {self.message}"
         return repr
+
+
+class SoundClip(TimeStampedModel):
+    subtitle = models.TextField()
+    voice = models.CharField(max_length=200)
+    model = models.CharField(max_length=200)
+    audio_file = models.FileField(upload_to="sound_clips/")
+
+    def __str__(self):
+        return f"{self.voice} - {self.subtitle[:50]}"
