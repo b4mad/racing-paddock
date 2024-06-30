@@ -169,6 +169,13 @@ class History(LoggingMixin):
             self.driver_fast_lap.data = driver_data
 
         driver_segments = self.driver_fast_lap.data.get("segments", {})
+        # check if driver_segments is a list
+        if not isinstance(driver_segments, dict):
+            self.log_error("driver_segments is not a dict, setting to empty dict")
+            self.log_error(driver_segments)
+            self.driver_fast_lap.data["segments"] = {}
+            self.driver_fast_lap.save()
+            driver_segments = self.driver_fast_lap.data["segments"]
         empty_segment = Segment()
         for segment in self.segments:
             driver_segment = driver_segments.get(segment.turn, empty_segment)

@@ -72,8 +72,10 @@ class CoachCopilots(LoggingMixin):
         if self._new_session_starting:
             start_time = time.time()
             while not self.history.is_ready():
-                if time.time() - start_time > 60:  # 1 minute timeout
-                    self.log_debug("History not ready after 1 minute, timing out")
+                if time.time() - start_time > 10:  # 10 seconds timeout
+                    error = self.history.get_and_reset_error()
+                    self.log_debug("History not ready after 10 seconds, timing out")
+                    self.log_debug(f"Error: {error}")
                     return False
 
                 if self.history.is_initializing():
