@@ -13,11 +13,12 @@ class Response:
     # i.e. it will be discarded by CrewChief if it is not played within 10 seconds
     # so we need to make sure that we send the response at least 10 seconds before the event
 
-    def __init__(self, message, priority=5, max_distance=None, at=None):
+    def __init__(self, message, priority=5, max_distance=None, at=None, immediate=False):
         self.message = message
         self.at = at
         self.priority = priority
         self.max_distance = max_distance
+        self.immediate = immediate
 
         self._sent = False
         self._discarded = False
@@ -57,6 +58,9 @@ class Response:
 
         if self.max_distance is not None:
             response_dict[self.MAX_DISTANCE] = self.max_distance
+
+        if self.immediate:
+            response_dict["immediate"] = True
 
         return response_dict
 

@@ -8,15 +8,15 @@ class CommentatorApplication(Application):
         if session.session_type and session.session_type.type == "NewSession":
             self.car = self.session.car
             txt = f"{self.car}"
-            message = ResponseTts(txt)
+            message = ResponseTts(txt, immediate=True)
             self.send_response(message)
 
             track = self.session.track
             txt = f"{track}"
-            message = ResponseTts(txt)
+            message = ResponseTts(txt, immediate=True)
             self.send_response(message)
 
-            message = ResponseTts("Let's go!")
+            message = ResponseTts("Let's go!", immediate=True)
             self.send_response(message)
 
     def notify(self, distance, telemetry, now):
