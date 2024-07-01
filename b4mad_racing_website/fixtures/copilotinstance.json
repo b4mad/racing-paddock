@@ -7,7 +7,7 @@
       "modified": "2023-12-23T22:30:50.669Z",
       "driver": 7,
       "copilot": 2,
-      "status": "CONFIGURED"
+      "status": "ENABLED"
     }
   },
   {
@@ -18,7 +18,7 @@
       "modified": "2023-12-23T22:30:50.022Z",
       "driver": 7,
       "copilot": 1,
-      "status": "CONFIGURED"
+      "status": "ENABLED"
     }
   },
   {
@@ -29,7 +29,7 @@
       "modified": "2023-12-23T22:30:49.697Z",
       "driver": 7,
       "copilot": 3,
-      "status": "CONFIGURED"
+      "status": "ENABLED"
     }
   },
   {
@@ -40,7 +40,7 @@
       "modified": "2023-12-23T22:30:49.697Z",
       "driver": 7,
       "copilot": 4,
-      "status": "CONFIGURED"
+      "status": "ENABLED"
     }
   }
 ]

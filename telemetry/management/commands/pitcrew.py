@@ -49,7 +49,11 @@ class Command(BaseCommand):
         if coach_name:
             driver, created = Driver.objects.get_or_create(name=coach_name)
             coach, created = Coach.objects.get_or_create(driver=driver)
-            crew.coach_watcher.start_coach(driver.name, coach, debug=True)
+            if driver.name == "durandom":
+                crew.coach_watcher.start_coach_no_history(driver.name, coach, debug=True)
+            else:
+                crew.coach_watcher.start_coach(driver.name, coach, debug=True)
+
         elif options["session_saver"]:
             t = threading.Thread(target=crew.firehose.run)
             t.name = "firehose"

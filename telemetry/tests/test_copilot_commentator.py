@@ -2,8 +2,7 @@ from django.test import TransactionTestCase
 
 from b4mad_racing_website.models import Copilot
 from telemetry.models import Coach, Driver
-from telemetry.pitcrew.coach_copilots import CoachCopilots
-from telemetry.pitcrew.history import History
+from telemetry.pitcrew.coach_copilots_no_history import CoachCopilotsNoHistory
 
 from .utils import get_session_df, read_responses, save_responses
 
@@ -45,30 +44,22 @@ class TestCommentatorApp(TransactionTestCase):
         copilot_count = Copilot.objects.count()
         self.assertEqual(copilot_count, 1)
 
-        history = History()
-
-        coach = CoachCopilots(history, coach)
+        coach = CoachCopilotsNoHistory(coach)
 
         session_df = get_session_df(session_id, measurement="laps_cc", bucket="racing")
 
         row = session_df.iloc[0].to_dict()
         topic = row["topic"].replace("Jim", "durandom")
-        coach.notify(topic, row)
-        history.init()
-        history._do_init = False
 
         captured_responses = []
-        try:
-            for index, row in session_df.iterrows():
-                row = row.to_dict()
-                response = coach.notify(topic, row, row["_time"])
-                if response:
-                    captured_responses.append((row["DistanceRoundTrack"], response))
-        except Exception as e:
-            raise e
-        finally:
-            print("stopping history thread")
-            history.disconnect()
+        for index, row in session_df.iterrows():
+            row = row.to_dict()
+            notify_topic = topic
+            if index == 0:
+                notify_topic = topic.replace("/Race", "/NewSession")
+            response = coach.notify(notify_topic, row, row["_time"])
+            if response:
+                captured_responses.append((row["DistanceRoundTrack"], response))
 
         responses_file = "test_copilot_commentator"
         if self.do_save_responses:

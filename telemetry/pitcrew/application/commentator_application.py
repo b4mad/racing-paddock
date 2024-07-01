@@ -1,10 +1,10 @@
-from telemetry.pitcrew.application.application import Application
+from telemetry.pitcrew.application.application_no_history import ApplicationNoHistory
 from telemetry.pitcrew.application.response import ResponseTts
 
 
-class CommentatorApplication(Application):
-    def __init__(self, session, history, coach):
-        super().__init__(session, history, coach)
+class CommentatorApplication(ApplicationNoHistory):
+    def __init__(self, session, coach):
+        super().__init__(session, coach)
         if session.session_type and session.session_type.type == "NewSession":
             self.car = self.session.car
             txt = f"{self.car}"

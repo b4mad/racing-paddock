@@ -9,6 +9,7 @@ from .active_drivers import ActiveDrivers
 # from .coach import Coach as PitCrewCoach
 # from .coach_app import CoachApp
 from .coach_copilots import CoachCopilots
+from .coach_copilots_no_history import CoachCopilotsNoHistory
 from .history import History
 from .kube_crew import KubeCrew
 from .mqtt import Mqtt
@@ -84,6 +85,24 @@ class CoachWatcher:
         threads.append(c)
         c.start()
         h.start()
+
+    def start_coach_no_history(self, driver_name, coach_model, debug=False):
+        coach = CoachCopilotsNoHistory(coach_model, debug=debug)
+
+        topic = f"crewchief/{driver_name}/#"
+        mqtt = Mqtt(coach, topic, replay=self.replay, debug=debug)
+
+        def mqtt_thread():
+            logging.info(f"MQTT thread starting for {driver_name}")
+            mqtt.run()
+            logging.info(f"MQTT thread stopped for {driver_name}")
+
+        c = threading.Thread(target=mqtt_thread)
+        c.name = f"mqtt-{driver_name}"
+
+        threads = list()
+        threads.append(c)
+        c.start()
 
     def run(self):
         try:
