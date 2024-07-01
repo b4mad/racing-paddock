@@ -48,7 +48,7 @@ class Persister:
             session.car_class = payload.get("CarClass", "")
             session.session_type = session_type
             self.sessions[topic] = session
-            logging.debug(f"New session: {topic}")
+            logging.debug(f"Persister: New session: {topic}")
 
         session = self.sessions[topic]
         session.signal(payload, now)
@@ -63,7 +63,6 @@ class Persister:
         self.session_saver.save_sessions()
         self.clear_sessions(now)
 
-    # TODO: clear sessions every now and then
     def clear_sessions(self, now):
         """Clear inactive telemetry sessions.
 
@@ -90,10 +89,10 @@ class Persister:
             #         del session.laps[i]
 
         if len(delete_sessions) > 0:
-            logging.debug(f"Inactive sessions: {len(delete_sessions)}")
-            logging.debug(f"Active sessions: {len(self.sessions)}")
+            logging.debug(f"Persister: Inactive sessions: {len(delete_sessions)}")
+            logging.debug(f"Persister: Active sessions: {len(self.sessions)}")
 
         # Delete all inactive sessions
         for topic in delete_sessions:
             del self.sessions[topic]
-            logging.debug(f"{topic}\n\t deleting inactive session")
+            logging.debug(f"Persister: {topic}\n\t deleting inactive session")

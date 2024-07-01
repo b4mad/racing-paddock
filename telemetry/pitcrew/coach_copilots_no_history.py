@@ -23,8 +23,6 @@ class CoachCopilotsNoHistory(LoggingMixin):
         self.topic = ""
         self.session_id = ""
         self.distance = 0
-        self.playing_at = {}  # distance -> bool
-        self.ticked_at = {}  # distance -> bool
         self.track_length = 1
         self._crashed = False
         self.telemetry = {}
@@ -109,28 +107,9 @@ class CoachCopilotsNoHistory(LoggingMixin):
             responses = []
             for resp in self.responses:
                 responses.append(json.dumps(resp.response()))
-                # if store_play_at:
-                #     # FIXME: make this speed dependent
-                #     start = self.distance_add(resp.at or self.distance, 1)
-                #     read_time = resp.read_time()
-                #     speed_at = self.history.speed_at_distance(start)
-                #     speed_now = self.telemetry.get("SpeedMs", 1)
-                #     if speed_at > 1:
-                #         ratio = speed_now / speed_at
-                #         read_time *= ratio
-                #     end = self.history.distance_add_seconds(start, read_time)
-                #     for distance in range(start, end):
-                #         play_at_distance = distance % self.track_length
-                #         self.playing_at[play_at_distance] = True
 
             self.responses = []
             return (self.response_topic, responses)
-
-    def message_playing_at(self, distance):
-        is_playing_at = self.playing_at.get(distance, False)
-        if is_playing_at:
-            return True
-        return False
 
     def notify(self, topic, telemetry, now=None):
         now = now or django.utils.timezone.now()
@@ -156,11 +135,6 @@ class CoachCopilotsNoHistory(LoggingMixin):
 
         self.telemetry = telemetry
         self.tick(topic, telemetry, now)
-
-        ticked_at_distance = self.previous_distance
-        while ticked_at_distance != self.distance:
-            ticked_at_distance = self.distance_add(ticked_at_distance, 1)
-            self.ticked_at[ticked_at_distance] = False
         self.previous_distance = self.distance
 
         for app in self.apps:
@@ -173,27 +147,6 @@ class CoachCopilotsNoHistory(LoggingMixin):
         return (distance + meters) % self.track_length
 
     def tick(self, topic, telemetry, now=None):
-        distance_diff = self.previous_distance - self.distance
-        if (self.track_length - 10 > distance_diff >= 1) or distance_diff < -10:
-            # we jumped at least 1 meters back
-            # unless we crossed the start finish line
-            # we might have gone off the track or reset the car to the pits
-            # hence we reset the messages
-            self.log_debug(f"distance: _diff: {distance_diff} -> reset responses")
-            if telemetry["SpeedMs"] < 1:
-                for app in self.apps:
-                    app.on_reset_to_pits(self.distance, telemetry, now)
-            else:
-                if not self._crashed:
-                    for app in self.apps:
-                        app.on_crash(self.distance, telemetry, now)
-                    self._crashed = True
-            self.previous_distance = self.distance
-            self.ticked_at.clear()
-            return
-
-        # reset special states
-        self._crashed = False
 
         # for distance in range(start, stop):
         delta = int(3 * int(telemetry["SpeedMs"]) + 10)
@@ -207,16 +160,13 @@ class CoachCopilotsNoHistory(LoggingMixin):
         # self.log_debug(f"start at {distance} to {stop} - delta: {delta} - speed: {telemetry['SpeedMs']} m/s {telemetry['SpeedMs'] * 3.6} km/h")
         while distance != stop:
             # self.log_debug(f"d: {distance} ({self.distance})")
-            self.playing_at[distance] = False
             if distance % 100 == 0:
                 self.log_debug(f"distance: {distance} ({self.distance})")
 
             # notify all registered apps
-            if not self.ticked_at.get(distance):
-                for app in self.apps:
-                    app.notify(distance, telemetry, now)
+            for app in self.apps:
+                app.notify(distance, telemetry, now)
 
-            self.ticked_at[distance] = True
             distance = self.distance_add(distance, 1)
 
         self.previous_delta = delta

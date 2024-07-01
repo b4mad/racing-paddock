@@ -5,9 +5,9 @@ class Session:
     def __init__(self, filter={}):
         if filter:
             self.id = filter["SessionId"]
-            self.track = Track.objects.get_or_create(name=filter["TrackCode"])[0]
-            self.car = Car.objects.get_or_create(name=filter["CarModel"])[0]
             self.game = Game.objects.get_or_create(name=filter["GameName"])[0]
+            self.track = self.game.tracks.get_or_create(name=filter["TrackCode"])[0]
+            self.car = self.game.cars.get_or_create(name=filter["CarModel"])[0]
             self.session_type = SessionType.objects.get_or_create(type=filter["SessionType"])[0]
             self.driver = Driver.objects.get_or_create(name=filter["Driver"])[0]
         else:
@@ -19,4 +19,7 @@ class Session:
             self.driver = Driver()
 
     def track_length(self) -> float:
-        return self.track.length
+        if self.track.length:
+            return self.track.length
+        else:
+            return 1.0
