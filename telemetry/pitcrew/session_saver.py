@@ -113,15 +113,21 @@ class SessionSaver:
                     #     continue
 
                     try:
-                        lap_record = session.record.laps.create(
-                            number=lap.number,
-                            car=session.car,
-                            track=track,
+                        lap_record, created = session.record.laps.get_or_create(
+                            number=lap.number, car=session.car, track=track
+                        )
+                        if created:
+                            logging.info(f"{session.session_id}: Created lap {lap_record}")
+                        else:
+                            logging.info(f"{session.session_id}: Found lap {lap_record}")
+
+                        lap_record.update(
                             start=lap.start,
                             end=lap.end,
                             length=lap.length,
                             valid=lap.valid,
                             time=lap.time,
+                            completed=lap.finished,
                         )
                         logging.info(f"{session.session_id}: Saving lap {lap_record}")
                         session.record.end = session.end

@@ -125,6 +125,7 @@ class Lap(ExportModelOperationsMixin("lap"), DirtyFieldsMixin, TimeStampedModel)
     time = models.FloatField(default=0)
     length = models.IntegerField(default=0)
     valid = models.BooleanField(default=False)
+    completed = models.BooleanField(default=True)
 
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="laps")
     track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="laps")

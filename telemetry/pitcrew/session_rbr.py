@@ -14,10 +14,6 @@ class LapRbr(Lap):
         if not self.persisted:
             return True
 
-        # no need to save if already persisted and finished
-        if self.finished and self.persisted:
-            return False
-
         # if the lap was not touched for 1 minute, no need to save
         now = django.utils.timezone.now()
         if (now - self.last_touched).total_seconds() > 60:
