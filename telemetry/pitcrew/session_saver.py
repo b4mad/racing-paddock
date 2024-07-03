@@ -96,7 +96,7 @@ class SessionSaver:
             lap_numbers = list(session.laps.keys())
             for lap_number in lap_numbers:
                 lap = session.laps.get(lap_number)
-                if session.record and lap.finished and not lap.persisted:
+                if session.record and lap.ready_to_save():
                     # check if lap length is within 98% of the track length
                     track = session.track
 
@@ -126,10 +126,10 @@ class SessionSaver:
                         logging.info(f"{session.session_id}: Saving lap {lap_record}")
                         session.record.end = session.end
                         session.record.save_dirty_fields()
-                        lap.persisted = True
+                        lap.persist()
                     except IntegrityError as e:
                         logging.error(f"{session.session_id}: Error saving lap {lap.number}: {e}")
-                        lap.persisted = True
+                        lap.persist()
                     except Exception as e:
                         logging.error(f"{session.session_id}: Error saving lap {lap.number}: {e}")
 

@@ -1,9 +1,36 @@
-from .session import Session
+import django.utils.timezone
+
+from .session import Lap, Session
+
+
+class LapRbr(Lap):
+    def __init__(self, number, **kwargs):
+        super().__init__(number, **kwargs)
+
+    def touch(self, now):
+        self.last_touched = now
+
+    def ready_to_save(self):
+        if not self.persisted:
+            return True
+
+        # no need to save if already persisted and finished
+        if self.finished and self.persisted:
+            return False
+
+        # if the lap was not touched for 1 minute, no need to save
+        now = django.utils.timezone.now()
+        if (now - self.last_touched).total_seconds() > 60:
+            return False
+
+        # persisted but not finished, yet
+        return True
 
 
 class SessionRbr(Session):
     def __init__(self, session_id, start=None):
         super().__init__(session_id, start=start)
+        self.lap_class = LapRbr
 
     def analyze(self, telemetry, now):
         try:
@@ -38,6 +65,7 @@ class SessionRbr(Session):
                 self.current_lap.length = distance
             self.current_lap.time = lap_time
 
+        self.current_lap.touch(now)
         # at the end of the session, lap_time stops, but distance keeps increasing
         if self.previous_tick_time == lap_time:
             self.counter_time_not_updated += 1

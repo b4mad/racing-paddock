@@ -30,6 +30,15 @@ class Lap:
     def __repr__(self):
         return self.__str__()
 
+    def persist(self):
+        self.persisted = True
+
+    def is_peristed(self):
+        return self.persisted
+
+    def ready_to_save(self):
+        return self.finished and not self.persisted
+
 
 class Session(LoggingMixin):
     def __init__(self, id, start=None):
@@ -55,6 +64,7 @@ class Session(LoggingMixin):
         self.previous_lap_time = -1
         self.previous_lap_time_previous = -1
         self.telemetry_valid = True
+        self.lap_class = Lap
 
     def signal(self, telemetry, now=None):
         now = now or django.utils.timezone.now()
@@ -69,7 +79,7 @@ class Session(LoggingMixin):
             )
 
     def new_lap(self, now, lap_number):
-        lap = Lap(lap_number, start=now, end=now)
+        lap = self.lap_class(lap_number, start=now, end=now)
         self.laps.get(lap_number, lap)
         self.laps[lap_number] = lap
         self.previous_lap = self.current_lap

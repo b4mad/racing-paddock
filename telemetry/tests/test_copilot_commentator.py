@@ -1,3 +1,5 @@
+import os
+
 from django.test import TransactionTestCase
 
 from b4mad_racing_website.models import Copilot
@@ -57,6 +59,11 @@ class TestCommentatorApp(TransactionTestCase):
             notify_topic = topic
             if index == 0:
                 notify_topic = topic.replace("/Race", "/NewSession")
+            # dont test this if we dont have an api key
+            # FIXME: we should mock the tts api
+            api_key = os.environ.get("ELEVENLABS_API_KEY")
+            if not api_key:
+                return
             response = coach.notify(notify_topic, row, row["_time"])
             if response:
                 captured_responses.append((row["DistanceRoundTrack"], response))
