@@ -11,10 +11,6 @@ from pydub import AudioSegment
 # from telemetry.factories import DriverFactory
 from telemetry.management.commands.rbr_roadbook import NoteMapper, Roadbook
 from telemetry.models import Game, Landmark, TrackGuide
-from telemetry.mqtt import MqttPublisher
-
-# from django.db import transaction
-from telemetry.tests.utils import get_session_df
 
 
 class Command(BaseCommand):
@@ -39,14 +35,14 @@ class Command(BaseCommand):
         if options["session"]:
             self.session()
 
-    def session(self):
-        mqtt = MqttPublisher()
-        session_id = "1703706617"
-        session_df = get_session_df(session_id)
+    # def session(self):
+    #     mqtt = MqttPublisher()
+    #     session_id = "1703706617"
+    #     session_df = get_session_df(session_id)
 
-        for index, row in session_df.iterrows():
-            row = row.to_dict()
-            mqtt.publish_df_dict(row)
+    #     for index, row in session_df.iterrows():
+    #         row = row.to_dict()
+    #         mqtt.publish_df_dict(row)
 
     def generate_tts(self):
         client = OpenAI()
@@ -128,27 +124,60 @@ class Command(BaseCommand):
         book = Roadbook(latest_file)
         # remove all existing notes
         Landmark.objects.filter(track=track, from_cc=True).delete()
+
+        previous_turn_distance = 0
+        turns = []
+
+        # First pass: collect all turns
         for note_id, note in book.notes.items():
-            logging.debug(note)
             mapped_note = mapper.map(note.type)
-            if mapped_note:
-                # logging.debug(mapped_note)
-                # create a new landmark
+            if mapped_note and mapped_note["category"] == "CORNERS":
+                turns.append((note.distance, mapped_note["name"]))
+
+        # Second pass: create landmarks including segments
+        for i, (distance, name) in enumerate(turns):
+            # Create turn landmark
+            logging.debug(f"Creating turn landmark {name}")
+            Landmark.objects.create(name=name, start=distance, track=track, kind=Landmark.KIND_TURN, from_cc=True)
+
+            # Create segment landmark (except before the first turn)
+            if i == 0:
+                segment_start = 0
+                next_turn = turns[i + 1]
+                next_turn_distance = next_turn[0]
+                segment_end = (distance + next_turn_distance) / 2
+            elif i == len(turns) - 1:
+                segment_end = track.length
+                previous_turn = turns[i - 1]
+                previous_turn_distance = previous_turn[0]
+                segment_start = (previous_turn_distance + distance) / 2
+            else:
+                previous_turn = turns[i - 1]
+                next_turn = turns[i + 1]
+                previous_turn_distance = previous_turn[0]
+                next_turn_distance = next_turn[0]
+                segment_start = (previous_turn_distance + distance) / 2
+                segment_end = (distance + next_turn_distance) / 2
+
+            segment_name = f"Segment {i}"
+            logging.debug(f"Creating segment landmark {segment_name}")
+            Landmark.objects.create(
+                name=segment_name,
+                start=segment_start,
+                end=segment_end,
+                track=track,
+                kind=Landmark.KIND_SEGMENT,
+                from_cc=True,
+            )
+
+        # Create other landmarks (non-turns)
+        for note_id, note in book.notes.items():
+            mapped_note = mapper.map(note.type)
+            if mapped_note and mapped_note["category"] != "CORNERS":
                 name = mapped_note["name"]
-                category = mapped_note["category"]
-                if category == "CORNERS":
-                    kind = Landmark.KIND_TURN
-                else:
-                    kind = Landmark.KIND_MISC
-
-                distance = note.distance
-
-                logging.debug(f"Creating landmark {name} - {kind}")
-                landmark, created = Landmark.objects.get_or_create(
-                    name=name, start=distance, track=track, kind=kind, from_cc=True
-                )
-            # else:
-            #     logging.debug(f"!!! No mapping for {note.type}")
+                kind = Landmark.KIND_MISC
+                logging.debug(f"Creating misc landmark {name}")
+                Landmark.objects.create(name=name, start=note.distance, track=track, kind=kind, from_cc=True)
 
     def rbr_roadbook(self, filename):
         # get all tracks for Richard Burns Rally
