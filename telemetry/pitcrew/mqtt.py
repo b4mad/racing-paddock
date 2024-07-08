@@ -121,7 +121,10 @@ class Mqtt:
 
         self.mqttc.loop_forever()
         # check if observer has a on_stop method
+        logging.debug("MQTT client stopped")
+
         if hasattr(self.observer, "on_stop") and callable(getattr(self.observer, "on_stop")):
+            logging.debug("calling observer.on_stop")
             self.observer.on_stop()
 
 

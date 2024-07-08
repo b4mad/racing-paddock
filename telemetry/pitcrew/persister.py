@@ -55,6 +55,7 @@ class Persister:
         self.save_sessions(now)
 
     def on_stop(self):
+        logging.debug("Persister: on_stop")
         self.save_sessions(django.utils.timezone.now(), force=True)
 
     def save_sessions(self, now, force=False):
