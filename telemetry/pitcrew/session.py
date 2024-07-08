@@ -23,6 +23,7 @@ class Lap:
         self.finished = finished
         self.valid = valid
         self.persisted = False
+        self.record = None
 
     def __str__(self):
         return f"Lap {self.number}: {self.time} / l: {self.length} / v: {self.valid} / f: {self.finished}"
@@ -30,8 +31,9 @@ class Lap:
     def __repr__(self):
         return self.__str__()
 
-    def persist(self):
+    def persist(self, record=None):
         self.persisted = True
+        self.record = record
 
     def is_peristed(self):
         return self.persisted
@@ -65,6 +67,17 @@ class Session(LoggingMixin):
         self.previous_lap_time_previous = -1
         self.telemetry_valid = True
         self.lap_class = Lap
+
+    def ready_to_save(self):
+        if self.record:
+            # no need to save if the session is already saved
+            return False
+
+        if str(self.session_type) == "NewSession":
+            return False
+
+        return True
+
 
     def signal(self, telemetry, now=None):
         now = now or django.utils.timezone.now()

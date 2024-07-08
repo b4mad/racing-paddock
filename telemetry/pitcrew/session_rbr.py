@@ -14,8 +14,17 @@ class LapRbr(Lap):
         if not self.persisted:
             return True
 
-        # if the lap was not touched for 1 minute, no need to save
+        # lap is persisted, but not finished
+        # and some data has not persisted yet
+        if self.record:
+            if abs(self.record.length - self.length) > 1:
+                return True
+
+            if abs(self.record.time - self.time) > 1:
+                return True
+
         now = django.utils.timezone.now()
+        # if the lap was not touched for 1 minute, no need to save
         if (now - self.last_touched).total_seconds() > 60:
             return False
 

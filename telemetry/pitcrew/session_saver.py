@@ -67,7 +67,7 @@ class SessionSaver:
 
             # save session to database
             # TODO: update session details if they change (e.g. end time)
-            if not session.record:
+            if session.ready_to_save():
                 try:
                     session.driver, created = Driver.objects.get_or_create(name=session.driver)
                     session.game, created = Game.objects.get_or_create(name=session.game_name)
@@ -132,7 +132,7 @@ class SessionSaver:
                         logging.info(f"{session.session_id}: Saving lap {lap_record}")
                         session.record.end = session.end
                         session.record.save_dirty_fields()
-                        lap.persist()
+                        lap.persist(lap_record)
                     except IntegrityError as e:
                         logging.error(f"{session.session_id}: Error saving lap {lap.number}: {e}")
                         lap.persist()
