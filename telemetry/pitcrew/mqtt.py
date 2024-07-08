@@ -120,6 +120,9 @@ class Mqtt:
             self.topic = f"replay/{self.topic}"
 
         self.mqttc.loop_forever()
+        # check if observer has a on_stop method
+        if hasattr(self.observer, "on_stop") and callable(getattr(self.observer, "on_stop")):
+            self.observer.on_stop()
 
 
 # if __name__ == "__main__":

@@ -82,10 +82,13 @@ class Command(BaseCommand):
         influx = Influx()
         self.live = options["live"]
         self.console = Console()
-        text_column = TextColumn("t: {task.fields[time]} - d: {task.fields[meters]}", table_column=Column(ratio=1))
+        text_column = TextColumn(
+            "t: {task.fields[time]} - d: {task.fields[meters]} - ticks: {task.fields[ticks]}",
+            table_column=Column(ratio=1),
+        )
         # bar_column = BarColumn(bar_width=None, table_column=Column(ratio=2))
         self.progress = Progress(text_column, expand=True)
-        self.task = self.progress.add_task("Replaying", total=100, meters=0, topic="", time=0)
+        self.task = self.progress.add_task("Replaying", total=100, meters=0, topic="", time=0, ticks=0)
         self.change_driver = options["change_driver"]
         self.keep_session_id = options["keep_session_id"]
         self.quiet = options["quiet"]
@@ -252,7 +255,12 @@ class Command(BaseCommand):
 
             if not self.quiet:
                 self.progress.update(
-                    self.task, advance=1, meters=distance_round_track, topic=topic, time=current_lap_time
+                    self.task,
+                    advance=1,
+                    meters=distance_round_track,
+                    topic=topic,
+                    time=current_lap_time,
+                    ticks=line_count,
                 )
 
             for field in monitor_fields:

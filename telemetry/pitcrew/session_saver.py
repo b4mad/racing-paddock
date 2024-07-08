@@ -121,14 +121,14 @@ class SessionSaver:
                         else:
                             logging.info(f"{session.session_id}: Found lap {lap_record}")
 
-                        lap_record.update(
-                            start=lap.start,
-                            end=lap.end,
-                            length=lap.length,
-                            valid=lap.valid,
-                            time=lap.time,
-                            completed=lap.finished,
-                        )
+                        lap_record.start = lap.start
+                        lap_record.end = lap.end
+                        lap_record.length = lap.length
+                        lap_record.valid = lap.valid
+                        lap_record.time = lap.time
+                        lap_record.completed = lap.finished
+                        lap_record.save_dirty_fields()
+
                         logging.info(f"{session.session_id}: Saving lap {lap_record}")
                         session.record.end = session.end
                         session.record.save_dirty_fields()

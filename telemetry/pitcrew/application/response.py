@@ -1,6 +1,8 @@
-from telemetry.pitcrew.tts import TTS
+import logging
 
-# from django.contrib.sites.models import Site
+from django.conf import settings
+
+from telemetry.pitcrew.tts import TTS
 
 
 class Response:
@@ -76,20 +78,22 @@ class ResponseTts(Response):
         self.sound_clip = None
 
     def create_sound_clip(self):
-        from django.conf import settings
 
-        tts = TTS()
-        self.sound_clip = tts.create_sound_clip(self.message)
-        # domain = Site.objects.get_current().domain
-        # if development protocol is http
-        # protocol = "https://"
-        if settings.DEBUG:
-            protocol = "http://"
-            domain = "localhost:8000"
-        else:
-            protocol = "https://"
-            domain = "b4mad.racing"
-        self.message = f"{protocol}{domain}{self.sound_clip.audio_file.url}"
+        try:
+            tts = TTS()
+            self.sound_clip = tts.create_sound_clip(self.message)
+            # domain = Site.objects.get_current().domain
+            # if development protocol is http
+            # protocol = "https://"
+            if settings.DEBUG:
+                protocol = "http://"
+                domain = "localhost:8000"
+            else:
+                protocol = "https://"
+                domain = "b4mad.racing"
+            self.message = f"{protocol}{domain}{self.sound_clip.audio_file.url}"
+        except ValueError as e:
+            logging.error(f"Error creating sound clip: {e}")
 
     def response(self):
         if not self.sound_clip:

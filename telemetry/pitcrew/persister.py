@@ -54,11 +54,15 @@ class Persister:
         session.signal(payload, now)
         self.save_sessions(now)
 
-    def save_sessions(self, now):
-        if self.save_ticks < self.save_interval:
-            self.save_ticks += 1
-            return
-        self.save_ticks = 0
+    def on_stop(self):
+        self.save_sessions(django.utils.timezone.now(), force=True)
+
+    def save_sessions(self, now, force=False):
+        if not force:
+            if self.save_ticks < self.save_interval:
+                self.save_ticks += 1
+                return
+            self.save_ticks = 0
 
         self.session_saver.save_sessions()
         self.clear_sessions(now)

@@ -111,6 +111,9 @@ class CoachCopilotsNoHistory(LoggingMixin):
             self.responses = []
             return (self.response_topic, responses)
 
+    def on_stop(self):
+        self.persister.on_stop()
+
     def notify(self, topic, telemetry, now=None):
         now = now or django.utils.timezone.now()
         self.persister.notify(topic, telemetry, now)
