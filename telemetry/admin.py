@@ -11,8 +11,10 @@ from .models import (
     Game,
     Landmark,
     Lap,
+    ReferenceSegment,
     Session,
     SessionType,
+    Segment,
     SoundClip,
     Track,
     TrackGuide,
@@ -94,7 +96,7 @@ class SessionAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
 
 
 class TrackAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["name", "game", "created", "modified"]
+    list_display = ["name", "game", "length", "created", "modified"]
     changelist_links = ["laps", "landmarks", "fast_laps"]
 
 
@@ -132,6 +134,15 @@ class TrackGuideNoteAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
     list_display = ["segment", "priority", "ref_id", "ref_eval", "message", "eval", "notes"]
 
 
+class SegmentAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
+    list_display = ["lap", "landmark"]
+    # fields = ["type", "history", "telemetry_features"]
+
+class ReferenceSegmentAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
+    list_display = ["lap", "landmark", "driver"]
+    # fields = ["type", "history", "telemetry_features"]
+
+
 # class DriverAdmin(admin.ModelAdmin):
 #     model = Driver
 #     display = ('name')
@@ -151,4 +162,6 @@ admin.site.register(Coach, CoachAdmin)
 admin.site.register(Landmark, LandmarkAdmin)
 admin.site.register(TrackGuide, TrackGuideAdmin)
 admin.site.register(TrackGuideNote, TrackGuideNoteAdmin)
+admin.site.register(Segment, SegmentAdmin)
+admin.site.register(ReferenceSegment, ReferenceSegmentAdmin)
 admin.site.register(SoundClip)
