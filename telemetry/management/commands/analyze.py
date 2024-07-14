@@ -4,8 +4,11 @@ from django.core.management.base import BaseCommand
 
 from telemetry.fast_lap_analyzer import FastLapAnalyzer
 from telemetry.influx import Influx
-from telemetry.models import FastLap
+from telemetry.models import FastLap, Driver, Session
 from telemetry.racing_stats import RacingStats
+from telemetry.pitcrew.persister_db import PersisterDb
+from racing_telemetry import Telemetry
+from racing_telemetry.analysis import Streaming
 
 
 class Command(BaseCommand):
@@ -51,8 +54,27 @@ class Command(BaseCommand):
         parser.add_argument("-n", "--new", action="store_true", help="only analyze new coaches")
         parser.add_argument("--copy-influx", action="store_true")
         parser.add_argument("--force-save", action="store_true")
+        parser.add_argument(
+            "-s",
+            "--session-ids",
+            nargs="+",
+            type=int,
+            default=None,
+            help="list of session ids to analyze",
+        )
+        parser.add_argument(
+            "--streaming",
+            action="store_true",
+            help="use streaming method for analysis",
+        )
 
     def handle(self, *args, **options):
+        if options["streaming"]:
+            self.handle_streaming(options, *args, **options)
+        else:
+            self.handle_default(options, *args, **options)
+
+    def handle_default(self, *args, **options):
         min_laps = 1
         max_laps = 10
         influx = Influx()
@@ -61,12 +83,6 @@ class Command(BaseCommand):
         from_bucket = options["from_bucket"]
         if options["copy_influx"]:
             influx_fast_sessions = influx.session_ids(bucket="fast_laps")
-
-        # if options["lap_ids"]:
-        #     laps = Lap.objects.filter(pk__in=options["lap_ids"])
-        #     self.analyze_fast_laps(laps)
-        #     return
-
         for game, car, track, count in racing_stats.known_combos_list(**options):
             logging.debug(f"{game} / {car} / {track} / {count} laps")
             laps = racing_stats.laps(game=game, car=car, track=track, valid=True)
@@ -174,3 +190,35 @@ class Command(BaseCommand):
             logging.debug("### SAVED ###")
         else:
             logging.debug("!!! NO CHANGE - NOT SAVING !!!")
+
+    def handle_streaming(self, options, *args, **kwargs):
+        logging.info("Starting streaming analysis...")
+        session_id = 1719933663
+        Session.objects.get(session_id=session_id).delete()
+        driver = Driver.objects.get(name="durandom")
+        self.telemetry = Telemetry()
+        self.telemetry.set_pandas_adapter()
+        self.persister = PersisterDb(driver)
+
+        self.streaming_analysis(session_id)
+
+        self.persister.on_stop()
+
+    def streaming_analysis(self, session_id):
+        self.telemetry.set_filter({'session_id': session_id, 'driver': 'durandom'})
+
+        # Use get_or_create_df to retrieve the DataFrame
+        session_df = self.telemetry.get_telemetry_df()
+        game = session_df["GameName"].iloc[0]
+        track = session_df["TrackCode"].iloc[0]
+        car = session_df["CarModel"].iloc[0]
+        topic = session_df["topic"].iloc[0]
+        # # landmarks = self.telemetry.landmarks(game=game, track=track)
+        streaming = Streaming(coasting_time=True)
+        for index, row in session_df.iterrows():
+            now = row["_time"]
+            streaming.notify(row.to_dict())
+            self.persister.notify(topic, row.to_dict(), now)
+            # features = streaming.get_features()
+            # for feature, value in features.items():
+            #     lap.at[index, feature] = value

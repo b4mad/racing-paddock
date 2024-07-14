@@ -60,6 +60,7 @@ elevenlabs = "*"
 # django-timescaledb = {git = "git+https://github.com/lynxx-apac/django-timescaledb.git#egg=django-timescaledb"}
 django-hijack = "*"
 racing-telemetry = "*"
+loguru = "*"
 
 [dev-packages]
 black = "*"
@@ -68,12 +69,10 @@ isort = "*"
 mypy = "*"
 pytest = "*"
 pytest-django = "*"
-sops2sealedsecret = {version = "*", index = "codeberg"}
 types-python-dateutil = "*"
 types-toml = "*"
 pytest-recording = "*"
 vcrpy = "*"
-racing-telemetry = {editable = true, path = "../racing-telemetry"}
 
 [requires]
 python_version = "3.10"

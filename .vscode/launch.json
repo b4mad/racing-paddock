@@ -20,9 +20,10 @@
             "justMyCode": false,
             "args": [
                 "analyze",
+                "--streaming",
                 // "--game", "Assetto Corsa (64 bit)",
-                "--game",
-                "Richard Burns Rally",
+                // "--game",
+                // "Richard Burns Rally",
                 // "--game", "iRacing",
                 // "--game", "rFactor 2 (64 bit)",
                 // "--game", "rFactor",
@@ -55,7 +56,7 @@
                 // "--car", "88 Mike Schreiner",
                 // "--car", "Unknown",
                 // "--lap-id", "72550"
-                "--copy-influx",
+                // "--copy-influx",
                 // "--force-save",
             ],
             "django": true

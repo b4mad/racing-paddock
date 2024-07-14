@@ -8,14 +8,14 @@ from telemetry.pitcrew.logging_mixin import LoggingMixin
 
 from .application.commentator_application import CommentatorApplication
 from .application.session import Session
-from .persister import Persister
+from .persister_db import PersisterDb
 
 
 class CoachCopilotsNoHistory(LoggingMixin):
     def __init__(self, coach_model: Coach, debug=False):
         self.coach_model = coach_model
         self.response_topic = f"/coach/{coach_model.driver.name}"
-        self.persister = Persister(debug=debug)
+        self.persister = PersisterDb(debug=debug)
         self.init_variables()
 
     def init_variables(self):

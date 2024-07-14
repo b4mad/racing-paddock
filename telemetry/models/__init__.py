@@ -81,27 +81,7 @@ class SessionType(TimeStampedModel):
     def __str__(self):
         return self.type
 
-
-class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStampedModel):
-    session_id = models.CharField(max_length=200)
-    start = models.DateTimeField(default=datetime.datetime.now)
-    end = models.DateTimeField(default=datetime.datetime.now)
-
-    driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="sessions")
-    session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="sessions")
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sessions")
-
-    class Meta:
-        unique_together = (
-            "driver",
-            "session_id",
-            "session_type",
-            "game",
-        )
-
-    def __str__(self):
-        return self.session_id
-
+from .session import Session
 
 class FastLap(ExportModelOperationsMixin("fastlap"), TimeStampedModel):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="fast_laps")
