@@ -15,7 +15,8 @@ class CoachCopilotsNoHistory(LoggingMixin):
     def __init__(self, coach_model: Coach, debug=False):
         self.coach_model = coach_model
         self.response_topic = f"/coach/{coach_model.driver.name}"
-        self.persister = PersisterDb(debug=debug)
+        driver = coach_model.driver
+        self.persister = PersisterDb(driver, debug=debug)
         self.init_variables()
 
     def init_variables(self):
