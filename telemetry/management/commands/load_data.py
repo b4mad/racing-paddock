@@ -19,6 +19,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--landmarks", action="store_true")
         parser.add_argument("--landmarks-rbr", nargs="?", type=str)
+        parser.add_argument("--track-name", nargs="?", type=str, help="Optional track name for --landmarks-rbr")
         parser.add_argument("--tts", action="store_true")
         parser.add_argument("--track-guide", nargs="?", type=str)
         parser.add_argument("--session", action="store_true")
@@ -31,7 +32,7 @@ class Command(BaseCommand):
         if options["tts"]:
             self.generate_tts()
         if options["landmarks_rbr"]:
-            self.rbr_roadbook(options["landmarks_rbr"])
+            self.rbr_roadbook(options["landmarks_rbr"], options["track_name"])
         if options["session"]:
             self.session()
 
@@ -179,7 +180,7 @@ class Command(BaseCommand):
                 logging.debug(f"Creating misc landmark {name}")
                 Landmark.objects.create(name=name, start=note.distance, track=track, kind=kind, from_cc=True)
 
-    def rbr_roadbook(self, filename):
+    def rbr_roadbook(self, filename, filter_track_name=None):
         # get all tracks for Richard Burns Rally
         tracks = Game.objects.filter(name="Richard Burns Rally").first().tracks.all()
         mapper = NoteMapper()
@@ -188,6 +189,9 @@ class Command(BaseCommand):
             # logging.debug(track)
             # see if a directory exists for the track
             track_name = track.name
+            if filter_track_name and track_name != filter_track_name:
+                continue
+
             # translate all umlaute to ascii
             track_name = track_name.replace("ä", "a").replace("ö", "o").replace("ü", "u")
             track_name = track_name.replace(".", "_").replace("'", "_").replace("é", "e")

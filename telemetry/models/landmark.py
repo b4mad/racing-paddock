@@ -23,4 +23,4 @@ class Landmark(TimeStampedModel):
     track = models.ForeignKey("Track", on_delete=models.CASCADE, related_name="landmarks")
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.kind}) [{self.start}-{self.end}]"
