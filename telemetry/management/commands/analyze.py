@@ -2,13 +2,12 @@ import logging
 
 from django.core.management.base import BaseCommand
 
+from racing_telemetry import Telemetry
 from telemetry.fast_lap_analyzer import FastLapAnalyzer
 from telemetry.influx import Influx
-from telemetry.models import FastLap, Driver, Session
-from telemetry.racing_stats import RacingStats
+from telemetry.models import Driver, FastLap, Session
 from telemetry.pitcrew.persister_db import PersisterDb
-from racing_telemetry import Telemetry
-from racing_telemetry.analysis import Streaming
+from telemetry.racing_stats import RacingStats
 
 
 class Command(BaseCommand):
@@ -205,19 +204,14 @@ class Command(BaseCommand):
         self.persister.on_stop()
 
     def streaming_analysis(self, session_id):
-        self.telemetry.set_filter({'session_id': session_id, 'driver': 'durandom'})
+        self.telemetry.set_filter({"session_id": session_id, "driver": "durandom"})
 
         # Use get_or_create_df to retrieve the DataFrame
         session_df = self.telemetry.get_telemetry_df()
-        game = session_df["GameName"].iloc[0]
-        track = session_df["TrackCode"].iloc[0]
-        car = session_df["CarModel"].iloc[0]
         topic = session_df["topic"].iloc[0]
         # # landmarks = self.telemetry.landmarks(game=game, track=track)
-        streaming = Streaming(coasting_time=True)
         for index, row in session_df.iterrows():
             now = row["_time"]
-            streaming.notify(row.to_dict())
             self.persister.notify(topic, row.to_dict(), now)
             # features = streaming.get_features()
             # for feature, value in features.items():

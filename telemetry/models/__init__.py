@@ -1,10 +1,11 @@
-import datetime
-
-from dirtyfields import DirtyFieldsMixin
 from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 from picklefield.fields import PickledObjectField
+
+from .lap import Lap
+from .session import Session  # noqa
+from .track import Track
 
 
 class Driver(ExportModelOperationsMixin("driver"), TimeStampedModel):
@@ -26,21 +27,6 @@ class Game(TimeStampedModel):
         ]
 
     name = models.CharField(max_length=200, unique=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Track(TimeStampedModel):
-    class Meta:
-        ordering = [
-            "name",
-        ]
-
-    name = models.CharField(max_length=200)
-    length = models.IntegerField(default=0)
-
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="tracks")
 
     def __str__(self):
         return self.name
@@ -81,7 +67,6 @@ class SessionType(TimeStampedModel):
     def __str__(self):
         return self.type
 
-from .session import Session
 
 class FastLap(ExportModelOperationsMixin("fastlap"), TimeStampedModel):
     game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="fast_laps")
@@ -96,47 +81,6 @@ class FastLap(ExportModelOperationsMixin("fastlap"), TimeStampedModel):
 
     def __str__(self):
         return f"{self.id}: {self.game} {self.car} {self.track}"
-
-
-class Lap(ExportModelOperationsMixin("lap"), DirtyFieldsMixin, TimeStampedModel):
-    number = models.IntegerField()
-    start = models.DateTimeField(default=datetime.datetime.now)
-    end = models.DateTimeField(default=datetime.datetime.now)
-    time = models.FloatField(default=0)
-    length = models.IntegerField(default=0)
-    valid = models.BooleanField(default=False)
-    completed = models.BooleanField(default=True)
-
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="laps")
-    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="laps")
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="laps")
-    fast_lap = models.ForeignKey(FastLap, on_delete=models.CASCADE, related_name="laps", null=True)
-
-    class Meta:
-        ordering = [
-            "number",
-        ]
-        unique_together = ("session", "start")
-
-    def __str__(self):
-        return (
-            f"{self.number}: {self.start.strftime('%H:%M:%S')} - {self.end.strftime('%H:%M:%S')} "
-            + f"{self.time}s {self.length}m valid: {self.valid}"
-        )
-
-    def time_human(self):
-        minutes = int(self.time // 60)
-        seconds = round(self.time % 60, 2)
-        # milliseconds = int((coach_lap_time % 1) * 1000)
-        time_string = ""
-        if minutes > 1:
-            time_string += f"{minutes} minutes "
-        elif minutes == 1:
-            time_string += f"{minutes} minute "
-
-        time_string += f"{seconds:.2f} seconds "
-
-        return time_string
 
 
 class FastLapSegment(TimeStampedModel):
@@ -294,14 +238,14 @@ class Segment(TimeStampedModel):
     # this is in hundreds of a second
     coasting_time = models.PositiveIntegerField(null=True)
 
-
-
     def __str__(self):
         return f"Segment for Lap {self.lap.number} - Landmark: {self.landmark.name}"
+
 
 class ReferenceSegment(Segment):
     track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="reference_segments")
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="reference_segments")
+
 
 class SoundClip(TimeStampedModel):
     subtitle = models.TextField()

@@ -1,12 +1,16 @@
 import datetime
 from typing import Optional
+
 import django.utils.timezone
 from dirtyfields import DirtyFieldsMixin
 from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
-from model_utils.models import TimeStampedModel
-from telemetry.models import Driver, SessionType, Game, Track, Car
 from loguru import logger
+from model_utils.models import TimeStampedModel
+
+from racing_telemetry.analysis import Streaming as StreamingAnalysis
+from telemetry.models import Car, Driver, Game, Landmark, Lap, SessionType, Track
+
 
 class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStampedModel):
     session_id = models.CharField(max_length=200)
@@ -31,12 +35,13 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
         super(Session, self).__init__(*args, **kwargs)
         self.current_lap_time = -1
         self.distance_round_track = 1_000_000_000
-        self.current_lap: Optional["Lap"] = None
+        self.current_lap: Optional[Lap] = None
         self.previous_lap = None
         self.previous_distance = -1
         self.previous_lap_time = -1
         self.previous_lap_time_previous = -1
         self.telemetry_valid = True
+        self.current_landmark: Landmark
 
     def __str__(self):
         return self.session_id
@@ -59,14 +64,20 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
         now = now or django.utils.timezone.now()
         self.end = now
         self.analyze(telemetry, now)
+        self.analyze_segment(telemetry, now)
+
+    def analyze_segment(self, telemetry, now):
+        if not self.current_lap:
+            return
+        if not self.current_landmark:
+            return
+        # segment = self.current_lap.get_segment(telemetry["DistanceRoundTrack"])
+        StreamingAnalysis(coasting_time=True)
 
     def new_lap(self, now, number) -> "Lap":
         # lap = self.laps.model(number=number, start=now, end=now)
         lap, lap_created = self.laps.get_or_create(
-            number=number,
-            track = self.track,
-            car = self.car,
-            defaults={"start": now, "end": now}
+            number=number, track=self.track, car=self.car, defaults={"start": now, "end": now}
         )
         if lap_created:
             logger.debug(f"Creating new lap: {lap}")
@@ -135,7 +146,6 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
         self.previous_tick_time = lap_time
         self.previous_tick_distance = distance
 
-
     def analyze_other(self, telemetry, now) -> None:
         try:
             distance = telemetry["DistanceRoundTrack"]
@@ -185,9 +195,7 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
                 self.previous_lap.time = lap_time_previous
                 self.previous_lap.valid = previous_lap_was_valid
                 self.previous_lap.finished = True
-                logger.debug(
-                    f"lap {self.previous_lap.number} time {lap_time_previous} valid {previous_lap_was_valid}"
-                )
+                logger.debug(f"lap {self.previous_lap.number} time {lap_time_previous} valid {previous_lap_was_valid}")
 
         self.previous_distance = distance
         self.previous_lap_time = lap_time
