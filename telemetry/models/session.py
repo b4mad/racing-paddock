@@ -10,10 +10,12 @@ from django_prometheus.models import ExportModelOperationsMixin
 from loguru import logger
 from model_utils.models import TimeStampedModel
 
-from racing_telemetry.analysis import Streaming as StreamingAnalysis
+from racing_telemetry.analysis import Streaming as StreamingAnalysis  # noqa: F401
 
 from .landmark import Landmark
 from .lap import Lap
+from .segment import Segment
+from .track import Track
 
 
 class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStampedModel):
@@ -24,7 +26,7 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
     driver = models.ForeignKey("Driver", on_delete=models.CASCADE, related_name="sessions")
     session_type = models.ForeignKey("SessionType", on_delete=models.CASCADE, related_name="sessions")
     game = models.ForeignKey("Game", on_delete=models.CASCADE, related_name="sessions")
-    track = models.ForeignKey("Track", on_delete=models.CASCADE, related_name="sessions", null=True)
+    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="sessions", null=True)
     car = models.ForeignKey("Car", on_delete=models.CASCADE, related_name="sessions", null=True)
 
     class Meta:
@@ -35,8 +37,13 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
             "game",
         )
 
-    def __init__(self, *args, **kwargs):
-        super(Session, self).__init__(*args, **kwargs)
+    def __str__(self):
+        return self.session_id
+
+    def analyze(self, telemetry, now) -> None:
+        raise Exception("Call 'prepare_for_analysis' first")
+
+    def prepare_for_analysis(self):
         self.current_lap_time = -1
         self.distance_round_track = 1_000_000_000
         self.current_lap: Optional[Lap] = None
@@ -45,15 +52,8 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
         self.previous_lap_time = -1
         self.previous_lap_time_previous = -1
         self.telemetry_valid = True
-        self.current_landmark: Landmark
-
-    def __str__(self):
-        return self.session_id
-
-    def analyze(self, telemetry, now) -> None:
-        raise Exception("Call 'prepare_for_analysis' first")
-
-    def prepare_for_analysis(self):
+        self.current_landmark: Optional[Landmark] = None
+        self.current_segment: Optional[Segment] = None
         if self.game.name == "Richard Burns Rally":
             self.analyze = self.analyze_rbr
         else:
@@ -73,11 +73,29 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
     def analyze_segment(self, telemetry, now):
         if not self.current_lap:
             return
-        # check if distance is in the current landmark
-        # otherwise get the new landmark for the distance
-        #   and create a new segment for the current_lap
-        #   based on the new landmark
-        #   and save the previous segment
+        if not self.track:
+            return
+
+        distance = telemetry.get("DistanceRoundTrack")
+        if distance is None:
+            return
+
+        # Check if distance is in the current landmark
+        if not self.current_landmark or not (self.current_landmark.start <= distance <= self.current_landmark.end):
+            # Get the new landmark for the distance
+            new_landmark = self.track.get_landmark(distance)
+            if not new_landmark:
+                return
+            self.current_landmark = new_landmark
+
+            if self.current_segment:
+                self.current_segment.save()
+
+            # Create a new segment for the current_lap based on the new landmark
+            self.current_segment = self.current_lap.segments.get_or_create(
+                landmark=self.current_landmark,
+            )[0]
+            logger.debug(f"New segment: {self.current_segment}")
 
     def new_lap(self, now, number) -> "Lap":
         # lap = self.laps.model(number=number, start=now, end=now)
