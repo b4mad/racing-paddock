@@ -5,8 +5,6 @@ from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
-from telemetry.models import Car, FastLap, Session, Track
-
 
 class Lap(ExportModelOperationsMixin("lap"), DirtyFieldsMixin, TimeStampedModel):
     number = models.IntegerField()
@@ -17,10 +15,10 @@ class Lap(ExportModelOperationsMixin("lap"), DirtyFieldsMixin, TimeStampedModel)
     valid = models.BooleanField(default=False)
     completed = models.BooleanField(default=True)
 
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="laps")
-    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="laps")
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="laps")
-    fast_lap = models.ForeignKey(FastLap, on_delete=models.CASCADE, related_name="laps", null=True)
+    session = models.ForeignKey("Session", on_delete=models.CASCADE, related_name="laps")
+    track = models.ForeignKey("Track", on_delete=models.CASCADE, related_name="laps")
+    car = models.ForeignKey("Car", on_delete=models.CASCADE, related_name="laps")
+    fast_lap = models.ForeignKey("FastLap", on_delete=models.CASCADE, related_name="laps", null=True)
 
     class Meta:
         ordering = [

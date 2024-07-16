@@ -1,9 +1,11 @@
 from django.db import models
+from django.db.models import CASCADE
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 from picklefield.fields import PickledObjectField
 
-from .lap import Lap
+from .landmark import Landmark
+from .lap import Lap  # noqa
 from .session import Session  # noqa
 from .track import Track
 
@@ -69,10 +71,10 @@ class SessionType(TimeStampedModel):
 
 
 class FastLap(ExportModelOperationsMixin("fastlap"), TimeStampedModel):
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="fast_laps")
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="fast_laps")
-    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="fast_laps")
-    driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="fast_laps", null=True)
+    game = models.ForeignKey("Game", on_delete=CASCADE, related_name="fast_laps")
+    car = models.ForeignKey("Car", on_delete=CASCADE, related_name="fast_laps")
+    track = models.ForeignKey("Track", on_delete=CASCADE, related_name="fast_laps")
+    driver = models.ForeignKey("Driver", on_delete=CASCADE, related_name="fast_laps", null=True)
     # add binary field to hold arbitrary data
     data = PickledObjectField(null=True)
 
@@ -143,35 +145,11 @@ class Coach(ExportModelOperationsMixin("coach"), TimeStampedModel):
         return self.driver.name
 
 
-class Landmark(TimeStampedModel):
-    name = models.CharField(max_length=200)
-    start = models.IntegerField(null=True)
-    end = models.IntegerField(null=True)
-    is_overtaking_spot = models.BooleanField(null=True)
-    from_cc = models.BooleanField(default=False)
-
-    KIND_MISC = "misc"
-    KIND_SEGMENT = "segment"
-    KIND_TURN = "turn"
-    KIND_CHOICES = [
-        (KIND_MISC, "Misc"),
-        (KIND_SEGMENT, "Segment"),
-        (KIND_TURN, "Turn"),
-    ]
-
-    kind = models.CharField(max_length=64, default=KIND_MISC, choices=KIND_CHOICES)
-
-    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="landmarks")
-
-    def __str__(self):
-        return self.name
-
-
 class TrackGuide(TimeStampedModel):
     name = models.CharField(max_length=200)
     description = models.TextField(default="")
-    car = models.ForeignKey(Car, on_delete=models.CASCADE)
-    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    car = models.ForeignKey("Car", on_delete=CASCADE)
+    track = models.ForeignKey("Track", on_delete=CASCADE)
 
     def car_game(self):
         return self.car.game
@@ -206,7 +184,7 @@ class TrackGuideNote(TimeStampedModel):
 
 
 class Segment(TimeStampedModel):
-    lap = models.ForeignKey(Lap, on_delete=models.CASCADE, related_name="segments")
+    lap = models.ForeignKey("Lap", on_delete=models.CASCADE, related_name="segments")
     landmark = models.ForeignKey(Landmark, on_delete=models.CASCADE, related_name="segments")
 
     kind = models.CharField(max_length=200, null=True)

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 from typing import Optional
 
@@ -9,7 +11,9 @@ from loguru import logger
 from model_utils.models import TimeStampedModel
 
 from racing_telemetry.analysis import Streaming as StreamingAnalysis
-from telemetry.models import Car, Driver, Game, Landmark, Lap, SessionType, Track
+
+from .landmark import Landmark
+from .lap import Lap
 
 
 class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStampedModel):
@@ -17,11 +21,11 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
     start = models.DateTimeField(default=datetime.datetime.now)
     end = models.DateTimeField(default=datetime.datetime.now)
 
-    driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="sessions")
-    session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="sessions")
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name="sessions")
-    track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name="sessions", null=True)
-    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name="sessions", null=True)
+    driver = models.ForeignKey("Driver", on_delete=models.CASCADE, related_name="sessions")
+    session_type = models.ForeignKey("SessionType", on_delete=models.CASCADE, related_name="sessions")
+    game = models.ForeignKey("Game", on_delete=models.CASCADE, related_name="sessions")
+    track = models.ForeignKey("Track", on_delete=models.CASCADE, related_name="sessions", null=True)
+    car = models.ForeignKey("Car", on_delete=models.CASCADE, related_name="sessions", null=True)
 
     class Meta:
         unique_together = (
@@ -69,8 +73,8 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
     def analyze_segment(self, telemetry, now):
         if not self.current_lap:
             return
-        if not self.current_landmark:
-            return
+        # if not self.current_landmark:
+        #     return
         # segment = self.current_lap.get_segment(telemetry["DistanceRoundTrack"])
         StreamingAnalysis(coasting_time=True)
 
