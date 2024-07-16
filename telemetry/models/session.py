@@ -73,10 +73,11 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
     def analyze_segment(self, telemetry, now):
         if not self.current_lap:
             return
-        # if not self.current_landmark:
-        #     return
-        # segment = self.current_lap.get_segment(telemetry["DistanceRoundTrack"])
-        StreamingAnalysis(coasting_time=True)
+        # check if distance is in the current landmark
+        # otherwise get the new landmark for the distance
+        #   and create a new segment for the current_lap
+        #   based on the new landmark
+        #   and save the previous segment
 
     def new_lap(self, now, number) -> "Lap":
         # lap = self.laps.model(number=number, start=now, end=now)
