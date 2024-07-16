@@ -82,7 +82,7 @@ class FastLap(ExportModelOperationsMixin("fastlap"), TimeStampedModel):
         ordering = ["game", "car", "track"]
 
     def __str__(self):
-        return f"{self.id}: {self.game} {self.car} {self.track}"
+        return f"{self.pk}: {self.game} {self.car} {self.track}"
 
 
 class FastLapSegment(TimeStampedModel):

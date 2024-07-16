@@ -45,9 +45,3 @@ class Lap(ExportModelOperationsMixin("lap"), DirtyFieldsMixin, TimeStampedModel)
         time_string += f"{seconds:.2f} seconds "
 
         return time_string
-
-    def get_landmark_at(self, distance):
-        for segment in self.segments.all():
-            if segment.start <= distance <= segment.end:
-                return segment
-        return None
