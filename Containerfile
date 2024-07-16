@@ -1,4 +1,4 @@
-FROM quay.io/fedora/python-310@sha256:430446ef4ea844de1b49e691a9f5da20b2194d6420463dd21e762bacbf713b66
+FROM quay.io/fedora/python-312@sha256:584a5c31c483ce13ce0f112cd9c7dcdf6cc3c808a62d5c0c55e0281df62bd3f6
 
 LABEL \
     name="b4mad-racing-paddock" \
