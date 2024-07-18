@@ -10,8 +10,6 @@ from django_prometheus.models import ExportModelOperationsMixin
 from loguru import logger
 from model_utils.models import TimeStampedModel
 
-from racing_telemetry.analysis import Streaming as StreamingAnalysis  # noqa: F401
-
 from .landmark import Landmark
 from .lap import Lap
 from .segment import Segment
@@ -71,9 +69,7 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
         self.analyze_segment(telemetry, now)
 
     def analyze_segment(self, telemetry, now):
-        if not self.current_lap:
-            return
-        if not self.track:
+        if not self.current_lap or not self.track:
             return
 
         distance = telemetry.get("DistanceRoundTrack")
@@ -93,19 +89,10 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
                 self.current_segment.save()
 
             # Create a new segment for the current_lap based on the new landmark
-            self.current_segment, _created = self.current_lap.segments.get_or_create(
-                landmark=self.current_landmark,
-            )
-            if _created:
-                logger.debug(f"New segment: {self.current_segment}")
-            else:
-                logger.debug(f"Found existing segment: {self.current_segment}")
+            self.current_segment = Segment.get_or_create_for_lap_and_landmark(self.current_lap, self.current_landmark)
 
-            self.streaming_analysis = StreamingAnalysis(coasting_time=True)
-
-        self.streaming_analysis.notify(telemetry)
-        features = self.streaming_analysis.get_features()
-        self.current_segment.coasting_time = int(features["coasting_time"] * 100)
+        if self.current_segment:
+            self.current_segment.analyze(telemetry, distance)
 
     def new_lap(self, now, number) -> "Lap":
         # lap = self.laps.model(number=number, start=now, end=now)
