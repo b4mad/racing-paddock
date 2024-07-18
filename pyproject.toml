@@ -18,7 +18,7 @@ profile = "black"
 
 [tool.black]
 include = '\.pyi?$'
-line-length = 128
+line-length = 256
 
 [tool.commitizen]
 major_version_zero = true
