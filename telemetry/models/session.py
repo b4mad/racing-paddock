@@ -89,13 +89,23 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
             self.current_landmark = new_landmark
 
             if self.current_segment:
+                logger.debug(f"Saving segment: {self.current_segment} with coasting time: {self.current_segment.coasting_time}")
                 self.current_segment.save()
 
             # Create a new segment for the current_lap based on the new landmark
-            self.current_segment = self.current_lap.segments.get_or_create(
+            self.current_segment, _created = self.current_lap.segments.get_or_create(
                 landmark=self.current_landmark,
-            )[0]
-            logger.debug(f"New segment: {self.current_segment}")
+            )
+            if _created:
+                logger.debug(f"New segment: {self.current_segment}")
+            else:
+                logger.debug(f"Found existing segment: {self.current_segment}")
+
+            self.streaming_analysis = StreamingAnalysis(coasting_time=True)
+
+        self.streaming_analysis.notify(telemetry)
+        features = self.streaming_analysis.get_features()
+        self.current_segment.coasting_time = int(features["coasting_time"] * 100)
 
     def new_lap(self, now, number) -> "Lap":
         # lap = self.laps.model(number=number, start=now, end=now)

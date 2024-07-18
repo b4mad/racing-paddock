@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from racing_telemetry import Telemetry
 from telemetry.fast_lap_analyzer import FastLapAnalyzer
 from telemetry.influx import Influx
-from telemetry.models import Driver, FastLap, Session
+from telemetry.models import Driver, FastLap
 from telemetry.pitcrew.persister_db import PersisterDb
 from telemetry.racing_stats import RacingStats
 
@@ -110,10 +110,11 @@ class Command(BaseCommand):
                     if session.session_id in influx_fast_sessions:
                         influx_fast_sessions.remove(session.session_id)
                         continue
-                    logging.info(f"copying session {session.session_id} to fast_laps")
-                    influx.copy_session(
-                        session.session_id, start=session.start, end=session.end, from_bucket=from_bucket
+                    logging.info(
+                        f"copying session {
+                            session.session_id} to fast_laps"
                     )
+                    influx.copy_session(session.session_id, start=session.start, end=session.end, from_bucket=from_bucket)
 
         # if options["copy_influx"]:
         #     logging.debug(f"fast sessions to be deleted: {influx_fast_sessions}")
@@ -134,14 +135,21 @@ class Command(BaseCommand):
         try:
             result = fl.analyze(min_laps=min_laps, max_laps=max_laps)
         except Exception as e:
-            logging.critical(f"Exception in analyze_fast_laps ({game} / {track} / {car}): {e}", exc_info=True)
+            logging.critical(
+                f"Exception in analyze_fast_laps ({
+                    game} / {track} / {car}): {e}",
+                exc_info=True,
+            )
             result = None
 
         if result:
             data = result[0]
             data["lap_ids"] = lap_ids
             used_laps = result[1]
-            logging.debug(f"found {len(data['segments'])} sectors in {len(used_laps)} laps")
+            logging.debug(
+                f"found {len(data['segments'])} sectors in {
+                    len(used_laps)} laps"
+            )
 
             delete_user_segments = True
             if fl.same_sectors:
@@ -193,7 +201,7 @@ class Command(BaseCommand):
     def handle_streaming(self, options, *args, **kwargs):
         logging.info("Starting streaming analysis...")
         session_id = 1719933663
-        Session.objects.get(session_id=session_id).delete()
+        # Session.objects.get(session_id=session_id).delete()
         driver = Driver.objects.get(name="durandom")
         self.telemetry = Telemetry()
         self.telemetry.set_pandas_adapter()

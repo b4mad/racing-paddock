@@ -1,6 +1,6 @@
-
 from django.db import models
 from model_utils.models import TimeStampedModel
+
 
 class Segment(TimeStampedModel):
     lap = models.ForeignKey("Lap", on_delete=models.CASCADE, related_name="segments")
@@ -33,7 +33,9 @@ class Segment(TimeStampedModel):
     gear = models.PositiveSmallIntegerField(null=True)
 
     # this is in hundreds of a second
-    coasting_time = models.PositiveIntegerField(null=True)
+    coasting_time = models.PositiveIntegerField(
+        null=True, help_text="Time spent coasting in this segment", verbose_name="Coasting Time in centiseconds"
+    )
 
     def __str__(self):
         return f"Segment for Lap {self.lap.number} - Landmark: {self.landmark.name}"
@@ -42,4 +44,3 @@ class Segment(TimeStampedModel):
 class ReferenceSegment(Segment):
     track = models.ForeignKey("Track", on_delete=models.CASCADE, related_name="reference_segments")
     driver = models.ForeignKey("Driver", on_delete=models.CASCADE, related_name="reference_segments")
-
