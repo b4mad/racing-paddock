@@ -29,6 +29,7 @@ repos:
     rev: "24.4.2"
     hooks:
       - id: black
+        args: ["--line-length=256"]
 
   - repo: https://github.com/PyCQA/flake8
     rev: "7.1.0"
@@ -42,7 +43,7 @@ repos:
             "E2,W5,D100,D101",
             "--select",
             "E,W,F,N",
-            "--max-line-length=150",
+            "--max-line-length=256",
           ]
 
   - repo: https://github.com/pycqa/bandit

@@ -1,6 +1,7 @@
 from django.db import models
-from model_utils.models import TimeStampedModel
 from loguru import logger
+from model_utils.models import TimeStampedModel
+
 from racing_telemetry.analysis import Streaming as StreamingAnalysis
 
 
@@ -36,20 +37,28 @@ class Segment(TimeStampedModel):
     gear = models.PositiveSmallIntegerField(null=True)
 
     # this is in hundreds of a second
-    coasting_time = models.PositiveIntegerField(
-        null=True, help_text="Time spent coasting in this segment", verbose_name="Coasting Time in centiseconds"
-    )
+    coasting_time = models.PositiveIntegerField(null=True, help_text="Time spent coasting in this segment", verbose_name="Coasting Time in centiseconds")
 
     def __str__(self):
         return f"Segment for Lap {self.lap.number} - Landmark: {self.landmark.name}"
 
+    def features_str(self) -> str:
+        # return string with all features that are not None, excluding specific fields
+        excluded_fields = ["id", "lap", "created", "modified"]
+        return ", ".join([f"{field.name}: {getattr(self, field.name)}" for field in self._meta.fields if getattr(self, field.name) is not None and field.name not in excluded_fields])
+
     def analyze(self, telemetry, distance):
         if not self.streaming_analysis:
-            self.streaming_analysis = StreamingAnalysis(coasting_time=True)
+            self.streaming_analysis = StreamingAnalysis(
+                coasting_time=True,
+                braking_point=True,
+            )
 
         self.streaming_analysis.notify(telemetry)
         features = self.streaming_analysis.get_features()
         self.coasting_time = int(features["coasting_time"] * 100)
+        if features["braking_point"] > 0:
+            self.braking_point = int(features["braking_point"] * 100)
 
     @classmethod
     def get_or_create_for_lap_and_landmark(cls, lap, landmark):
