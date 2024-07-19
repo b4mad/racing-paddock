@@ -86,10 +86,12 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
 
             if self.current_segment:
                 logger.debug(f"Saving segment: {self.current_segment.features_str()}")
+                self.current_segment.finalize_analysis()
                 self.current_segment.save()
 
             # Create a new segment for the current_lap based on the new landmark
             self.current_segment = Segment.get_or_create_for_lap_and_landmark(self.current_lap, self.current_landmark)
+            self.current_segment.prepare_for_analysis()
 
         if self.current_segment:
             self.current_segment.analyze(telemetry, distance)

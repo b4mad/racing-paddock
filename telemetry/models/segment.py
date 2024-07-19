@@ -6,7 +6,6 @@ from racing_telemetry.analysis import Streaming as StreamingAnalysis
 
 
 class Segment(TimeStampedModel):
-    streaming_analysis = None
     lap = models.ForeignKey("Lap", on_delete=models.CASCADE, related_name="segments")
     landmark = models.ForeignKey("Landmark", on_delete=models.CASCADE, related_name="segments")
 
@@ -47,18 +46,23 @@ class Segment(TimeStampedModel):
         excluded_fields = ["id", "lap", "created", "modified"]
         return ", ".join([f"{field.name}: {getattr(self, field.name)}" for field in self._meta.fields if getattr(self, field.name) is not None and field.name not in excluded_fields])
 
-    def analyze(self, telemetry, distance):
-        if not self.streaming_analysis:
-            self.streaming_analysis = StreamingAnalysis(
-                coasting_time=True,
-                braking_point=True,
-            )
+    def prepare_for_analysis(self):
+        self.streaming_analysis = StreamingAnalysis(
+            coasting_time=True,
+            braking_point=True,
+            lift_off_point=True,
+        )
 
+    def analyze(self, telemetry, distance):
         self.streaming_analysis.notify(telemetry)
+
+    def finalize_analysis(self):
         features = self.streaming_analysis.get_features()
         self.coasting_time = int(features["coasting_time"] * 100)
         if features["braking_point"] > 0:
             self.braking_point = int(features["braking_point"] * 100)
+        if features["lift_off_point"] > 0:
+            self.lift_off_point = int(features["lift_off_point"] * 100)
 
     @classmethod
     def get_or_create_for_lap_and_landmark(cls, lap, landmark):
