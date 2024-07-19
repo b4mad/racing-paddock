@@ -24,13 +24,9 @@ class Lap(ExportModelOperationsMixin("lap"), DirtyFieldsMixin, TimeStampedModel)
         ordering = [
             "number",
         ]
-        unique_together = ("session", "start")
 
     def __str__(self):
-        return (
-            f"{self.number}: {self.start.strftime('%H:%M:%S')} - {self.end.strftime('%H:%M:%S')} "
-            + f"{self.time}s {self.length}m valid: {self.valid}"
-        )
+        return f"{self.number}: {self.start.strftime('%H:%M:%S')} - {self.end.strftime('%H:%M:%S')} " + f"{self.time}s {self.length}m valid: {self.valid}"
 
     def time_human(self):
         minutes = int(self.time // 60)

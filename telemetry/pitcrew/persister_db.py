@@ -54,7 +54,7 @@ class PersisterDb:
         session = self.sessions[topic]
         if session:
             session.signal(payload, now)
-        self.save_sessions(now)
+        # self.save_sessions(now)
 
     def get_session(self, session_id, game, track, car, session_type, car_class) -> Optional[Session]:
         try:
@@ -89,9 +89,7 @@ class PersisterDb:
                 logger.debug(f"Found existing session: {session}")
         except Exception as e:
             logger.error(f"Error creating session: {e}")
-            logger.error(
-                f"session_id: {session_id}, game: {game}, track: {track}, car: {car}, session_type: {session_type}, car_class: {car_class}"
-            )
+            logger.error(f"session_id: {session_id}, game: {game}, track: {track}, car: {car}, session_type: {session_type}, car_class: {car_class}")
             return None
 
         return session

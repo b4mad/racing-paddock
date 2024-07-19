@@ -61,12 +61,17 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
         self.save_dirty_fields()
         if self.current_lap:
             self.current_lap.save_dirty_fields()
+        if self.current_segment:
+            self.current_segment.finalize_analysis()
+            logger.debug(f"Saving segment: {self.current_segment.features_str()}")
+            self.current_segment.save()
 
     def signal(self, telemetry, now=None):
         now = now or django.utils.timezone.now()
         self.end = now
         self.analyze(telemetry, now)
         self.analyze_segment(telemetry, now)
+        # FIXME: also save analysis on crossing the finish line
 
     def analyze_segment(self, telemetry, now):
         if not self.current_lap or not self.track:
@@ -83,11 +88,12 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
             if not new_landmark:
                 return
             self.current_landmark = new_landmark
+            self.save_analysis()
 
-            if self.current_segment:
-                logger.debug(f"Saving segment: {self.current_segment.features_str()}")
-                self.current_segment.finalize_analysis()
-                self.current_segment.save()
+            # if self.current_segment:
+            #     self.current_segment.finalize_analysis()
+            #     logger.debug(f"Saving segment: {self.current_segment.features_str()}")
+            #     self.current_segment.save()
 
             # Create a new segment for the current_lap based on the new landmark
             self.current_segment = Segment.get_or_create_for_lap_and_landmark(self.current_lap, self.current_landmark)

@@ -1,6 +1,7 @@
 import logging
 
 from django.core.management.base import BaseCommand
+from loguru import logger
 
 from racing_telemetry import Telemetry
 from telemetry.fast_lap_analyzer import FastLapAnalyzer
@@ -95,9 +96,7 @@ class Command(BaseCommand):
 
             valid_laps = list(laps)
 
-            used_laps = self.analyze_fast_laps(
-                valid_laps, min_laps=min_laps, max_laps=max_laps, force_save=options["force_save"]
-            )
+            used_laps = self.analyze_fast_laps(valid_laps, min_laps=min_laps, max_laps=max_laps, force_save=options["force_save"])
 
             if options["copy_influx"] and (used_laps or game in ["Richard Burns Rally"]):
                 sessions = set()
@@ -199,28 +198,29 @@ class Command(BaseCommand):
             logging.debug("!!! NO CHANGE - NOT SAVING !!!")
 
     def handle_streaming(self, options, *args, **kwargs):
-        logging.info("Starting streaming analysis...")
-        session_id = 1719933663
-        # Session.objects.get(session_id=session_id).delete()
-        driver = Driver.objects.get(name="durandom")
+        logger.info("Starting streaming analysis...")
+
+        racing_stats = RacingStats(using="prod")
         self.telemetry = Telemetry()
         self.telemetry.set_pandas_adapter()
+        # for game, car, track, count in racing_stats.known_combos_list(**options):
+        #     logger.info(f"{game} / {car} / {track} / {count} laps")
+        # sessions = racing_stats.sessions(game=game, car=car, track=track)
+        sessions = racing_stats.sessions(**options)
+        for session in sessions:
+            logger.info(f"Analyzing session {session}")
+            self.streaming_analysis(session)
+
+    def streaming_analysis(self, session):
+        driver = Driver.objects.get(name=session.driver.name)
         self.persister = PersisterDb(driver)
-
-        self.streaming_analysis(session_id)
-
-        self.persister.on_stop()
-
-    def streaming_analysis(self, session_id):
-        self.telemetry.set_filter({"session_id": session_id, "driver": "durandom"})
-
-        # Use get_or_create_df to retrieve the DataFrame
+        self.telemetry.set_filter({"session_id": session.session_id, "driver": driver.name})
         session_df = self.telemetry.get_telemetry_df()
+        if session_df.empty:
+            logger.warning(f"Empty session {session.session_id}")
+            return
         topic = session_df["topic"].iloc[0]
-        # # landmarks = self.telemetry.landmarks(game=game, track=track)
         for index, row in session_df.iterrows():
             now = row["_time"]
             self.persister.notify(topic, row.to_dict(), now)
-            # features = streaming.get_features()
-            # for feature, value in features.items():
-            #     lap.at[index, feature] = value
+        self.persister.on_stop()

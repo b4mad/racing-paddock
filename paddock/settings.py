@@ -158,6 +158,14 @@ else:
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
         },
+        "prod": {
+            "ENGINE": "django_prometheus.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME_PROD", "paddock"),
+            "USER": os.getenv("DB_USER_PROD", "paddock"),
+            "PASSWORD": os.getenv("DB_PASSWORD_PROD", "paddock"),
+            "HOST": os.getenv("DB_HOST_PROD", "localhost"),
+            "PORT": os.getenv("DB_PORT_PROD", "5432"),
+        },
         "readonly": {
             "ENGINE": "django_prometheus.db.backends.postgresql",
             "NAME": os.getenv("DB_NAME", "paddock"),

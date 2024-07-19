@@ -51,6 +51,7 @@ class Segment(TimeStampedModel):
             coasting_time=True,
             braking_point=True,
             lift_off_point=True,
+            apex=True,
         )
 
     def analyze(self, telemetry, distance):
@@ -58,11 +59,14 @@ class Segment(TimeStampedModel):
 
     def finalize_analysis(self):
         features = self.streaming_analysis.get_features()
+        self.streaming_analysis.calculate_apex()
         self.coasting_time = int(features["coasting_time"] * 100)
         if features["braking_point"] > 0:
             self.braking_point = int(features["braking_point"] * 100)
         if features["lift_off_point"] > 0:
             self.lift_off_point = int(features["lift_off_point"] * 100)
+        if features["apex"] > 0:
+            self.apex = int(features["apex"] * 100)
 
     @classmethod
     def get_or_create_for_lap_and_landmark(cls, lap, landmark):

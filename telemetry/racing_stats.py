@@ -2,12 +2,14 @@ from datetime import datetime, timedelta
 
 from django.db import connection
 from django.db.models import CharField, Count, Max, Q, Value
+from loguru import logger  # noqa F401
 
-from telemetry.models import FastLap, Game, Lap, Track
+from telemetry.models import FastLap, Game, Lap, Session, Track
 
 
 class RacingStats:
-    def __init__(self):
+    def __init__(self, using="default"):
+        self.using = using
         pass
 
     def combos(self, type="", **kwargs):
@@ -26,13 +28,9 @@ class RacingStats:
         laps = laps.filter(session__end__gte=start_date)
         # group by game, track, and car
         if type == "circuit" or type == "":
-            laps = laps.values(
-                "session__game__name", "track__name", "car__name", "session__game__id", "track__id", "car__id"
-            )
+            laps = laps.values("session__game__name", "track__name", "car__name", "session__game__id", "track__id", "car__id")
             # annotate with count of laps, valid laps, and latest lap end time
-            laps = laps.annotate(
-                lap_count=Count("id"), valid_lap_count=Count("id", filter=Q(valid=True)), latest_lap_end=Max("end")
-            )
+            laps = laps.annotate(lap_count=Count("id"), valid_lap_count=Count("id", filter=Q(valid=True)), latest_lap_end=Max("end"))
             if type == "circuit":
                 # exclude all rally games: Richard Burns Rally, Dirt Rally, Dirt Rally 2.0
                 laps = laps.exclude(session__game__name__in=["Richard Burns Rally", "Dirt Rally", "Dirt Rally 2.0"])
@@ -71,7 +69,7 @@ class RacingStats:
             filter["car__name"] = car
 
         filter["valid"] = True
-        laps = Lap.objects.filter(**filter)
+        laps = Lap.objects.using(self.using).filter(**filter)
         # group by track and car and game
         laps = laps.values("track__name", "car__name", "track__game__name")
         laps = laps.annotate(count=Count("id"))
@@ -130,6 +128,21 @@ class RacingStats:
 
         # for lap in laps:
         #     yield lap
+
+    def sessions(self, game=None, track=None, car=None, driver=None, **kwargs):
+        filter = {}
+        if game:
+            filter["game__name"] = game
+        if track:
+            filter["track__name"] = track
+        if car:
+            filter["car__name"] = car
+
+        if driver is not None:
+            filter["session__driver__name"] = driver
+
+        sessions = Session.objects.using(self.using).filter(**filter).order_by("start")
+        return sessions
 
     def fast_laps_cursor(self, game=None, track=None, car=None, **kwargs):
         where = []
