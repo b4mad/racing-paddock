@@ -2577,12 +2577,12 @@
         },
         "racing-telemetry": {
             "hashes": [
-                "sha256:429792f6b6dbf3f5777e3084ce3e06f40a68ab5ec18993433399a44d9182dbeb",
-                "sha256:ad0c3ad9313a19fab3634ae27473389e9199e3214027094fafce429447b4e560"
+                "sha256:d0085ac4277cd63ceb4342fcdf5517f192c40d9ec6fc6090a63f7ffe314717b1",
+                "sha256:f1136e6a4c755311403482b6717eb93d0e665536cb288d24390ae17831aa6d04"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.6'",
-            "version": "==0.1.4"
+            "version": "==0.1.5"
         },
         "reactivex": {
             "hashes": [
@@ -3038,7 +3038,7 @@
                 "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d",
                 "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"
             ],
-            "markers": "python_version < '3.11'",
+            "markers": "python_version >= '3.8'",
             "version": "==4.12.2"
         },
         "tzdata": {
