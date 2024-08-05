@@ -78,10 +78,11 @@ class ResponseTts(Response):
         self.sound_clip = None
 
     def create_sound_clip(self):
-
         try:
             tts = TTS()
-            self.sound_clip = tts.create_sound_clip(self.message)
+            voice = "smOo3538WLyYkRnbULCJ"
+            model = "eleven_turbo_v2_5"
+            self.sound_clip = tts.create_sound_clip(self.message, voice=voice, model=model)
             # domain = Site.objects.get_current().domain
             # if development protocol is http
             # protocol = "https://"
