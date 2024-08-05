@@ -52,8 +52,14 @@ class TTS:
         if isinstance(audio, Iterator):
             audio = b"".join(audio)
 
-        # Save the audio content to the FileField
-        sound_clip.audio_file.save(f"{text[:30]}.mp3", ContentFile(audio), save=False)
+        # Save the SoundClip instance to generate the pk
+        sound_clip.save()
+
+        # Create a unique filename using the pk
+        unique_filename = f"{sound_clip.pk}-{text[:30]}.mp3"
+
+        # Save the audio content to the FileField with the unique filename
+        sound_clip.audio_file.save(unique_filename, ContentFile(audio), save=False)
         sound_clip.save()
 
         return sound_clip

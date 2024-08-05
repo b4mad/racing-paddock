@@ -22,6 +22,7 @@ T='{"time": '$TIMESTAMP', "telemetry": {"Clutch":0.0,"Brake":1.0,"Throttle":0.0,
 
 # New Session
 TOPIC="replay/crewchief/durandom/1689266594/Richard Burns Rally/Sardian Night/Renault Clio 16S Williams GrpA/NewSession"
+TOPIC="crewchief/durandom/1689266594/Richard Burns Rally/Sardian Night/Renault Clio 16S Williams GrpA/NewSession"
 T='{"time": '$TIMESTAMP', "telemetry": {"Clutch":0.0,"Brake":1.0,"Throttle":0.0,"Handbrake":0.0,"SteeringAngle":-0.0103,"Rpms":0.0,"Gear":0,"SpeedMs":0.0,"DistanceRoundTrack":'$DISTANCE_ROUND_TRACK',"WorldPosition_x":37.7886124,"WorldPosition_y":1.904185,"WorldPosition_z":-204.916718,"CurrentLap":1,"CurrentLapTime":-3.0,"LapTimePrevious":-1.0,"CurrentLapIsValid":false,"PreviousLapWasValid":true,"CarClass":"F_VEE"}}'
 
 # TOPIC="crewchief/Jim/1689266594/Automobilista 2/Taruma:Taruma_Internacional/Formula Vee/Qualify"
@@ -29,17 +30,20 @@ T='{"time": '$TIMESTAMP', "telemetry": {"Clutch":0.0,"Brake":1.0,"Throttle":0.0,
 
 if [ -z "$MQTT_HOST" ]; then
   MQTT_HOST=telemetry.b4mad.racing
-  MQTT_HOST=mosquitto-mqtt
 fi
 CLIENT_ID=$(hostname)-$$
 
-# check if MQTT_PORT is set
-if [ -z "$MQTT_PORT" ]; then
-  MQTT_PORT=1883
-  # MQTT_PORT=31883
+# default to secure connection
+if [ -z "$SKIP_TLS" ]; then
+  MQTT_PORT=30883
+  TLS_CERT_OPTS="--tls-use-os-certs"
+else
+  MQTT_PORT=31883
+  TLS_CERT_OPTS=""
 fi
 
 mosquitto_pub -u crewchief -P crewchief \
   -t "$TOPIC" \
-  -p $MQTT_PORT -h $MQTT_HOST -i $CLIENT_ID -d \
+  -p $MQTT_PORT -h $MQTT_HOST $TLS_CERT_OPTS \
+  -i $CLIENT_ID -d \
   -m "$T"
