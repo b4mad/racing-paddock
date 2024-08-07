@@ -102,9 +102,7 @@ class ProfileDetailView(DetailView):
                 context["driver"] = Driver.objects.get(name=self.request.user.profile.mqtt_drivername)
             except Driver.DoesNotExist:
                 context["driver"] = None
-                messages.add_message(
-                    request, messages.WARNING, "We CANT find you mqtt driver name in the telemetry database."
-                )
+                messages.add_message(request, messages.WARNING, "We CANT find you mqtt driver name in the telemetry database.")
 
             # now get the last 5 sessons for this driver
             if context["driver"]:
@@ -251,12 +249,7 @@ def session(request, template_name="session.html", **kwargs):
         context["car"] = lap.car
 
         # Use select_related to avoid repeated SQL queries for the session
-        compare_laps = list(
-            Lap.objects.filter(car_id=car_id, track_id=track_id, valid=True, time__gte=0, fast_lap__isnull=False)
-            .select_related("session")
-            .prefetch_related("session__driver")
-            .order_by("time")[:5]
-        )
+        compare_laps = list(Lap.objects.filter(car_id=car_id, track_id=track_id, valid=True, time__gte=0, fast_lap__isnull=False).select_related("session").prefetch_related("session__driver").order_by("time")[:5])
     else:
         compare_laps = []
 
@@ -286,7 +279,7 @@ def sessions(request, template_name="sessions.html", **kwargs):
         context["track"] = Track.objects.get(pk=track_id)
 
     # Calculate the start date based on the range
-    start_date = datetime.now() - timedelta(days=14)
+    start_date = datetime.now() - timedelta(days=365)
 
     # Filter laps based on the end time within the range
     filter["end__gte"] = start_date
@@ -299,6 +292,15 @@ def sessions(request, template_name="sessions.html", **kwargs):
 
     context["sessions"] = sessions
 
+    return render(request, template_name=template_name, context=context)
+
+
+def lap(request, template_name="lap.html", lap_id="", **kwargs):
+    lap = get_object_or_404(Lap, pk=lap_id)
+    context = {
+        "lap": lap,
+        "session": lap.session,
+    }
     return render(request, template_name=template_name, context=context)
 
 

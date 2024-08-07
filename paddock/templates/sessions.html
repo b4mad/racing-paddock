@@ -36,6 +36,7 @@
                 <tr>
                   <td>
                     <a href="{% url 'session' session_id=session.session_id lap=lap.number %}" class="btn btn-primary">View</a>
+                    <a href="{% url 'lap' lap_id=lap.pk %}" class="btn btn-secondary">Stats</a>
                   </td>
                   <td>{{ lap.number }}</td>
                   <td>{{ lap.start }}</td>

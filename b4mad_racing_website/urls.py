@@ -31,4 +31,5 @@ urlpatterns = [
     path("session/<int:session_id>", views.session, name="session"),
     path("session/<int:session_id>/<int:lap>", views.session, name="session"),
     path("sessions/<int:game_id>/<int:car_id>/<int:track_id>", views.sessions, name="sessions"),
+    path("lap/<int:lap_id>", views.lap, name="lap"),
 ]
