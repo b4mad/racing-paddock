@@ -37,6 +37,7 @@ class Segment(TimeStampedModel):
 
     # this is in hundreds of a second
     coasting_time = models.PositiveIntegerField(null=True, help_text="Time spent coasting in this segment", verbose_name="Coasting Time in centiseconds")
+    launch_wheel_slip_time = models.PositiveIntegerField(null=True, help_text="Duration of wheel slip during launch in centiseconds", verbose_name="Launch Wheel Slip Duration in centiseconds")
 
     def __str__(self):
         return f"Segment for Lap {self.lap.number} - Landmark: {self.landmark.name}"
@@ -52,6 +53,7 @@ class Segment(TimeStampedModel):
             braking_point=True,
             lift_off_point=True,
             apex=True,
+            launch_wheel_slip_time=True,
         )
 
     def analyze(self, telemetry, distance):
@@ -67,6 +69,8 @@ class Segment(TimeStampedModel):
             self.lift_off_point = int(features["lift_off_point"] * 100)
         if features["apex"] > 0:
             self.apex = int(features["apex"] * 100)
+        if features["launch_wheel_slip_time"] > 0:
+            self.launch_wheel_slip_time = int(features["launch_wheel_slip_time"] * 100)
 
     @classmethod
     def get_or_create_for_lap_and_landmark(cls, lap, landmark):
