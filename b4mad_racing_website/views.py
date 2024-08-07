@@ -297,9 +297,11 @@ def sessions(request, template_name="sessions.html", **kwargs):
 
 def lap(request, template_name="lap.html", lap_id="", **kwargs):
     lap = get_object_or_404(Lap, pk=lap_id)
+    segments = lap.segments.select_related("landmark").order_by("landmark__start")
     context = {
         "lap": lap,
         "session": lap.session,
+        "segments": segments,
     }
     return render(request, template_name=template_name, context=context)
 

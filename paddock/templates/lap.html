@@ -10,6 +10,61 @@
   </div>
 
   <div class="card-body">
+    <h2>Lap Details</h2>
+    <p><strong>Lap Time:</strong> {{ lap.time }}</p>
+    <p><strong>Valid:</strong> {{ lap.valid|yesno:"Yes,No" }}</p>
+    <p><strong>Track:</strong> {{ lap.track.name }}</p>
+    <p><strong>Car:</strong> {{ lap.car.name }}</p>
+
+    <h3>Segments</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Landmark</th>
+          <th>Kind</th>
+          <th>Braking Point</th>
+          <th>Lift Off Point</th>
+          <th>Acceleration Point</th>
+          <th>Brake Pressure</th>
+          <th>Brake Application Rate</th>
+          <th>Brake Release Rate</th>
+          <th>Throttle Lift</th>
+          <th>Throttle Application Rate</th>
+          <th>Throttle Release Rate</th>
+          <th>Apex</th>
+          <th>Entry Speed</th>
+          <th>Corner Speed</th>
+          <th>Exit Speed</th>
+          <th>Gear</th>
+          <th>Coasting Time</th>
+          <th>Launch Wheel Slip Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for segment in segments %}
+        <tr>
+          <td>{{ segment.landmark.name }}</td>
+          <td>{{ segment.kind }}</td>
+          <td>{{ segment.braking_point }}</td>
+          <td>{{ segment.lift_off_point }}</td>
+          <td>{{ segment.acceleration_point }}</td>
+          <td>{{ segment.brake_pressure }}</td>
+          <td>{{ segment.brake_application_rate }}</td>
+          <td>{{ segment.brake_release_rate }}</td>
+          <td>{{ segment.throttle_lift }}</td>
+          <td>{{ segment.throttle_application_rate }}</td>
+          <td>{{ segment.throttle_release_rate }}</td>
+          <td>{{ segment.apex }}</td>
+          <td>{{ segment.entry_speed }}</td>
+          <td>{{ segment.corner_speed }}</td>
+          <td>{{ segment.exit_speed }}</td>
+          <td>{{ segment.gear }}</td>
+          <td>{{ segment.coasting_time }}</td>
+          <td>{{ segment.launch_wheel_slip_time }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 {%endblock%}
