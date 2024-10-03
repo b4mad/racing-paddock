@@ -12,6 +12,8 @@ from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 # we need to import these to make sure the apps are registered
 import b4mad_racing_website.fastlap_app  # noqa: F401
@@ -122,6 +124,11 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = Profile
     # fields = ["newsletter_allowed", "publicly_visible", "mqtt_drivername"]
     form_class = ProfileForm
+
+    def get_object(self, queryset=None):
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        queryset = self.get_queryset()
+        return get_object_or_404(queryset, Q(user__username__iexact=slug))
 
     def form_valid(self, form: BaseModelForm) -> HttpResponse:
         # This method is called when valid form data has been POSTed.

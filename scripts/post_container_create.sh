@@ -8,4 +8,5 @@ pipenv run ./manage.py migrate
 # pipenv run ./manage.py loaddata session lap sessiontype
 DJANGO_SUPERUSER_PASSWORD=admin pipenv run ./manage.py createsuperuser  --username admin --email admin@example.com --noinput || true
 pipenv run ./manage.py loaddata driver game fastlap fastlapsegment landmark lap session sessiontype track trackguide trackguidenote coach car copilot copilotinstance profile user
+git config --global --add safe.directory /workspaces/racing-paddock
 pip install -U pre-commit && pre-commit install-hooks
