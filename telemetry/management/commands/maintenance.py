@@ -4,7 +4,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from telemetry.influx import Influx
-from telemetry.models import FastLap, Lap, Session, Telemetry
+from telemetry.models import FastLap, Lap, Session
 from telemetry.pitcrew.segment import Segment
 
 
@@ -65,6 +65,12 @@ class Command(BaseCommand):
             action="store_true",
         )
 
+        parser.add_argument(
+            "--fix-cars",
+            help="check for cars with duplicate names within the same game",
+            action="store_true",
+        )
+
     def handle(self, *args, **options):
         if options["delete_influx"]:
             self.influx = Influx()
@@ -79,11 +85,61 @@ class Command(BaseCommand):
             self.fix_fastlaps()
         elif options["dump_session"]:
             self.dump_session()
+        elif options["fix_cars"]:
+            self.fix_cars()
+
+    def fix_cars(self):
+        from django.db.models import Count
+
+        from telemetry.models import Car, Game, Session
+
+        # Check for duplicate cars
+        duplicate_cars = Car.objects.values("name", "game").annotate(name_count=Count("name")).filter(name_count__gt=1)
+
+        if duplicate_cars:
+            print("Found cars with duplicate names within the same game:")
+            for car_data in duplicate_cars:
+                game = Game.objects.get(id=car_data["game"])
+                cars = Car.objects.filter(name=car_data["name"], game=game)
+                print(f"Game: {game.name}, Car: {car_data['name']}")
+
+                cars_with_sessions = []
+                for car in cars:
+                    session_count = Session.objects.filter(car=car).count()
+                    print(f"  - Car ID: {car.id}, Sessions: {session_count}")
+                    if session_count == 0:
+                        print(f"    Deleting car with ID: {car.id} (no sessions)")
+                        car.delete()
+                    else:
+                        cars_with_sessions.append((car, session_count))
+
+                if len(cars_with_sessions) > 1:
+                    # Sort cars by session count in descending order
+                    cars_with_sessions.sort(key=lambda x: x[1], reverse=True)
+                    # Keep the car with the most sessions, delete others
+                    for car, count in cars_with_sessions[1:]:
+                        print(f"    Deleting car with ID: {car.id} (fewer sessions: {count})")
+                        car.delete()
+        else:
+            print("No cars with duplicate names within the same game found.")
+
+        # # Check for cars with no sessions
+        # cars_without_sessions = Car.objects.annotate(session_count=Count('sessions')).filter(session_count=0)
+        # if cars_without_sessions:
+        #     print("\nFound cars with no associated sessions:")
+        #     for car in cars_without_sessions:
+        #         print(f"Deleting car: Game: {car.game.name}, Car: {car.name}, ID: {car.id}")
+        #         car.delete()
+        # else:
+        #     print("\nNo cars without associated sessions found.")
 
     def dump_session(self):
+        # TODO: Revisit this method. The Telemetry model is not defined.
+        # Uncomment and fix the code below once the Telemetry model is available.
         # session_id = "1689266594"
-        query_set = Telemetry.timescale.time_bucket("time", "1 hour").values("time", "session_id_telemetry")
-        print(query_set)
+        # query_set = Telemetry.timescale.time_bucket("time", "1 hour").values("time", "session_id_telemetry")
+        # print(query_set)
+        pass
 
     def fix_fastlaps(self):
         """

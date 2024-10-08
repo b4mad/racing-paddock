@@ -5,10 +5,10 @@ from model_utils.models import TimeStampedModel
 from picklefield.fields import PickledObjectField
 
 from .landmark import Landmark
-from .lap import Lap
-from .session import Session
-from .track import Track
-from .segment import Segment, ReferenceSegment
+from .lap import Lap  # noqa F401
+from .segment import ReferenceSegment, Segment  # noqa F401
+from .session import Session  # noqa F401
+from .track import Track  # noqa F401
 
 
 class Driver(ExportModelOperationsMixin("driver"), TimeStampedModel):
@@ -40,6 +40,7 @@ class Car(TimeStampedModel):
         ordering = [
             "name",
         ]
+        unique_together = ("game", "name")
 
     name = models.CharField(max_length=200)
 
