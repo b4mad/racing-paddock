@@ -60,7 +60,9 @@ class PersisterDb:
         try:
             r_game = Game.objects.get(name=game)
             if car_class:
-                r_car_class = CarClass.objects.get(name=car_class, game=r_game)
+                r_car_class, car_class_created = CarClass.objects.get_or_create(name=car_class, game=r_game)
+                if car_class_created:
+                    logger.debug(f"Created new car class: {r_car_class}")
                 r_car, car_created = r_game.cars.get_or_create(name=car, car_class=r_car_class)
             else:
                 r_car, car_created = r_game.cars.get_or_create(name=car)

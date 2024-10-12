@@ -215,6 +215,7 @@ class Command(BaseCommand):
         driver = Driver.objects.get(name=session.driver.name)
         self.persister = PersisterDb(driver)
         self.telemetry.set_filter({"session_id": session.session_id, "driver": driver.name})
+        logger.debug(f"Analyzing session {session.session_id} for {driver.name}")
         session_df = self.telemetry.get_telemetry_df()
         if session_df.empty:
             logger.warning(f"Empty session {session.session_id}")

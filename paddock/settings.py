@@ -3,8 +3,20 @@ Django settings for paddock project.
 """
 
 import logging
+
 import os
 import sys
+# https://github.com/Delgan/loguru/issues/1012
+# from loguru import logger
+
+# logging_format = (
+#     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+#     "<level>{level: <8}</level> | "
+#     "<cyan>{file.path}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+# )
+
+# logger.remove()
+# logger.add(sys.stderr, format=logging_format)
 from pathlib import Path
 
 import environ
