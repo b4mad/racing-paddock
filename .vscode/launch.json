@@ -21,6 +21,7 @@
             "args": [
                 "analyze",
                 "--streaming",
+                "--session-ids", "1728763512"
                 // "--game", "Assetto Corsa (64 bit)",
                 // "--game",
                 // "Richard Burns Rally",

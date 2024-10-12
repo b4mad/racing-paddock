@@ -129,7 +129,7 @@ class RacingStats:
         # for lap in laps:
         #     yield lap
 
-    def sessions(self, game=None, track=None, car=None, driver=None, **kwargs):
+    def sessions(self, game=None, track=None, car=None, driver=None, session_ids=None, **kwargs):
         filter = {}
         if game:
             filter["game__name"] = game
@@ -139,7 +139,10 @@ class RacingStats:
             filter["car__name"] = car
 
         if driver is not None:
-            filter["session__driver__name"] = driver
+            filter["driver__name"] = driver
+
+        if session_ids is not None:
+            filter["session_id__in"] = session_ids
 
         sessions = Session.objects.using(self.using).filter(**filter).order_by("start")
         return sessions
