@@ -91,7 +91,7 @@ class TelemetryLoader:
         return df
 
     def get_session_df(self, session_id, measurement="laps_cc", bucket="racing"):
-        # make sure the session_id is an integer
+        # make sure the session_id is an integer 
         session_id = int(session_id)
         file_path = f"{self.temp_dir}/session_{session_id}_df.csv.gz"
 
@@ -100,23 +100,38 @@ class TelemetryLoader:
         else:
             influx = Influx()
             aggregate = "100ms"
-            # aggregate = ""
-            # if self.caching:
-            #     aggregate = "1s"
+            
+            # First try fast_laps bucket
             try:
                 session_df = influx.session_df(
                     session_id,
-                    measurement=measurement,
-                    bucket=bucket,
+                    measurement="fast_laps",
+                    bucket="fast_laps", 
                     start="-10y",
                     aggregate=aggregate,
                     drop_tags=True,
                 )
-                if self.caching:
-                    self.save_dataframe(session_df, file_path)
             except Exception as e:
-                logging.debug(f"Error fetching session data: {e}")
+                logging.debug(f"Error fetching session data from fast_laps: {e}")
                 session_df = pd.DataFrame()
+
+            # If no data found, try laps_cc bucket
+            if len(session_df) == 0:
+                try:
+                    session_df = influx.session_df(
+                        session_id,
+                        measurement=measurement,
+                        bucket=bucket,
+                        start="-10y", 
+                        aggregate=aggregate,
+                        drop_tags=True,
+                    )
+                except Exception as e:
+                    logging.debug(f"Error fetching session data from laps_cc: {e}")
+                    session_df = pd.DataFrame()
+
+            if self.caching and len(session_df) > 0:
+                self.save_dataframe(session_df, file_path)
 
         if len(session_df) > 0:
             df = self.process_dataframe(session_df)
