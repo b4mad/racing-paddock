@@ -351,7 +351,19 @@ class Analyzer:
 
         return features
 
-    def resample_channels(self, df, columns=["Brake", "SpeedMs"], freq=1, max_distance=0):
+    def resample_channels(self, lap_df, columns=["Brake", "SpeedMs"], freq=1, max_distance=0):
+        # Early return if DataFrame is empty
+        if len(lap_df) == 0:
+            return lap_df
+            
+        # Check if DistanceRoundTrack exists
+        if "DistanceRoundTrack" not in lap_df.columns:
+            logging.error("DistanceRoundTrack column not found in DataFrame")
+            return lap_df
+
+        # Make sure DistanceRoundTrack is sorted
+        lap_df = lap_df.sort_values("DistanceRoundTrack")
+
         interpolate_columns = [
             "Brake",
             "SpeedMs",
@@ -371,44 +383,51 @@ class Analyzer:
         ]
         backfill_columns = ["Gear", "CurrentLap"]
 
-        df_interpolate_columns = []
-        df_backfill_columns = []
-        for column in columns:
-            if column in interpolate_columns:
-                df_interpolate_columns.append(column)
-            elif column in backfill_columns:
-                df_backfill_columns.append(column)
+        # Filter columns that actually exist in the DataFrame
+        df_interpolate_columns = [col for col in columns if col in interpolate_columns and col in lap_df.columns]
+        df_backfill_columns = [col for col in columns if col in backfill_columns and col in lap_df.columns]
 
         if max_distance == 0:
             # get the max distance from the dataframe and round it up to the next integer
-            max_distance = int(np.ceil(df["DistanceRoundTrack"].max()))
+            max_distance = int(np.ceil(lap_df["DistanceRoundTrack"].max()))
 
         # Define the new distance range
-        # new_distance = np.arange(0, max_distance + freq, freq)
         new_distance = np.arange(0, max_distance, freq)
-
-        # Ensure new_distance is of type float
         new_distance = new_distance.astype(float)
 
         # Create a new DataFrame with evenly spaced Distance
         new_df = pd.DataFrame(new_distance, columns=["DistanceRoundTrack"])
 
-        # ValueError: right keys must be sorted
-        # FIXME maybe sort by time or CurrentLapTime?
-        df = df.sort_values(by="DistanceRoundTrack")
+        try:
+            result_df = new_df.copy()
 
-        # The pd.merge_asof() function is used for merging on near keys.
-        # The interpolate() function then fills in the missing 'Throttle' values.
-        # The interpolation method can be adjusted based on your data characteristics
-        # (e.g., linear, quadratic).
-        if df_interpolate_columns:
-            source_df = df[df_interpolate_columns + ["DistanceRoundTrack"]]
-            new_df = pd.merge_asof(new_df, source_df, on="DistanceRoundTrack", direction="nearest").interpolate(
-                "linear"
-            )
-        if df_backfill_columns:
-            source_df = df[df_backfill_columns + ["DistanceRoundTrack"]]
-            new_df = pd.merge_asof(new_df, source_df, on="DistanceRoundTrack", direction="nearest").bfill()
+            # Handle interpolated columns
+            if df_interpolate_columns:
+                source_df = lap_df[df_interpolate_columns + ["DistanceRoundTrack"]]
+                interp_df = pd.merge_asof(
+                    result_df,
+                    source_df,
+                    on="DistanceRoundTrack", 
+                    direction="nearest"
+                ).interpolate("linear")
+                result_df[df_interpolate_columns] = interp_df[df_interpolate_columns]
+
+            # Handle backfill columns
+            if df_backfill_columns:
+                source_df = lap_df[df_backfill_columns + ["DistanceRoundTrack"]]
+                backfill_df = pd.merge_asof(
+                    result_df,
+                    source_df,
+                    on="DistanceRoundTrack",
+                    direction="nearest"
+                ).bfill()
+                result_df[df_backfill_columns] = backfill_df[df_backfill_columns]
+
+            new_df = result_df
+
+        except Exception as e:
+            logging.error(f"Error in resample_channels: {e}")
+            return lap_df
 
         return new_df
 
