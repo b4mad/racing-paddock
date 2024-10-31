@@ -91,7 +91,7 @@ class TelemetryLoader:
         return df
 
     def get_session_df(self, session_id, measurement="laps_cc", bucket="racing"):
-        # make sure the session_id is an integer 
+        # make sure the session_id is an integer
         session_id = int(session_id)
         file_path = f"{self.temp_dir}/session_{session_id}_df.csv.gz"
 
@@ -100,34 +100,34 @@ class TelemetryLoader:
         else:
             influx = Influx()
             aggregate = "100ms"
-            
-            # First try fast_laps bucket
+
+            # First try laps_cc bucket
             try:
                 session_df = influx.session_df(
                     session_id,
-                    measurement="fast_laps",
-                    bucket="fast_laps", 
+                    measurement=measurement,
+                    bucket=bucket,
                     start="-10y",
                     aggregate=aggregate,
                     drop_tags=True,
                 )
             except Exception as e:
-                logging.debug(f"Error fetching session data from fast_laps: {e}")
+                logging.debug(f"Error fetching session data from laps_cc: {e}")
                 session_df = pd.DataFrame()
 
-            # If no data found, try laps_cc bucket
+            # If no data found, try fast_laps bucket
             if len(session_df) == 0:
                 try:
                     session_df = influx.session_df(
                         session_id,
-                        measurement=measurement,
-                        bucket=bucket,
-                        start="-10y", 
+                        measurement="fast_laps",
+                        bucket="fast_laps",
+                        start="-10y",
                         aggregate=aggregate,
                         drop_tags=True,
                     )
                 except Exception as e:
-                    logging.debug(f"Error fetching session data from laps_cc: {e}")
+                    logging.debug(f"Error fetching session data from fast_laps: {e}")
                     session_df = pd.DataFrame()
 
             if self.caching and len(session_df) > 0:
