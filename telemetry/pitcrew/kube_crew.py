@@ -62,11 +62,11 @@ class KubeCrew:
 
         deployment = self.deployment_obj
         deployment.metadata["name"] = name
-        deployment.metadata["labels"]["app.kubernetes.io/component"] = name
-        deployment.metadata["labels"]["b4mad.racing/driver"] = name
-        deployment.metadata["labels"]["b4mad.racing/component"] = "pitcrew"
-        deployment.spec["selector"]["matchLabels"]["app.kubernetes.io/component"] = name
-        deployment.spec["template"]["metadata"]["labels"]["app.kubernetes.io/component"] = name
+        deployment.metadata["labels"]["pitcrew.b4mad.racing/driver"] = name
+        # deployment.metadata["labels"]["b4mad.racing/driver"] = name
+        # deployment.metadata["labels"]["b4mad.racing/component"] = "pitcrew"
+        deployment.spec["selector"]["matchLabels"]["pitcrew.b4mad.racing/driver"] = name
+        deployment.spec["template"]["metadata"]["labels"]["pitcrew.b4mad.racing/driver"] = name
 
         # set spec.template.spec.containers[0].env[-1].value to the driver name
         deployment.spec["template"]["spec"]["containers"][0]["env"][-1]["value"] = driver_name
