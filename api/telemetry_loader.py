@@ -30,6 +30,7 @@ class TelemetryLoader:
         # only return the columns we need: "SpeedMs", "Throttle", "Brake", "DistanceRoundTrack"
         columns = [
             "SpeedMs",
+            "Rpms",
             "Throttle",
             "Brake",
             "DistanceRoundTrack",
@@ -37,6 +38,7 @@ class TelemetryLoader:
             "Gear",
             "SteeringAngle",
             "CurrentLapTime",
+            "Handbrake",
         ]
 
         # check if the session contains position data
