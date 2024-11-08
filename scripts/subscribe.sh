@@ -25,7 +25,9 @@ else
   TLS_CERT_OPTS=""
 fi
 
-mosquitto_sub -u crewchief -P crewchief \
+USERNAME=crewchief
+PASSWORD=crewchief
+mosquitto_sub -u $USERNAME -P $PASSWORD \
   -p $MQTT_PORT -h $MQTT_HOST $TLS_CERT_OPTS \
   -i $CLIENT_ID -d \
   -t $MQTT_TOPIC

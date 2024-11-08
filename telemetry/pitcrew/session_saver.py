@@ -40,17 +40,21 @@ class SessionSaver:
                     session.driver = Driver.objects.get(name=session.driver)
                     session.game = Game.objects.get(name=session.game_name)
                     session.session_type = SessionType.objects.get(type=session.session_type)
-                    session.car = session.game.cars.get(name=session.car)
-                    session.car.car_class = session.game.car_classes.get(name=session.car_class)
-                    session.track = session.game.tracks.get(name=session.track)
+                    session.car, created = session.game.cars.get_or_create(name=session.car)
+                    session.car.car_class, created = session.game.car_classes.get_or_create(name=session.car_class)
+                    session.track, created = session.game.tracks.get_or_create(name=session.track)
                     session.record = session.driver.sessions.filter(
                         session_id=session.session_id,
                         session_type=session.session_type,
                         game=session.game,
+                        car=session.car,
+                        track=session.track,
                     ).first() or Session(
                         session_id=session.session_id,
                         session_type=session.session_type,
                         game=session.game,
+                        car=session.car,
+                        track=session.track,
                         start=session.start,
                         end=session.end,
                     )
