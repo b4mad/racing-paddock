@@ -3,6 +3,7 @@ metadata:
   labels:
     app.kubernetes.io/component: paddock-pitcrew
     pitcrew.b4mad.racing/driver: pitcrew-driver
+    pitcrew.b4mad.racing/component: pitcrew
   name: pitcrew-driver
   annotations:
     image.openshift.io/triggers: '[{"from":{"kind":"ImageStreamTag","name":"paddock:latest"},"fieldPath":"spec.template.spec.containers[?(@.name==\"pitcrew\")].image"}]'
