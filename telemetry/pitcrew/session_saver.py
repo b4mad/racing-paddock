@@ -1,10 +1,9 @@
 import logging
 import threading
-import time
 
 from django.db import IntegrityError
 
-from telemetry.models import Driver, Game, Session, SessionType
+from telemetry.models import Driver, Game, SessionType
 
 
 class SessionSaver:
@@ -22,47 +21,47 @@ class SessionSaver:
     def stopped(self):
         return self._stop_event.is_set()
 
-    def save_sessions_loop(self):
-        while True and not self.stopped():
-            if self.save:
-                self.save_sessions()
-            else:
-                self.fetch_sessions()
-            self.ready = True
-            time.sleep(self.sleep_time)
+    # def save_sessions_loop(self):
+    #     while True and not self.stopped():
+    #         if self.save:
+    #             self.save_sessions()
+    #         else:
+    #             self.fetch_sessions()
+    #         self.ready = True
+    #         time.sleep(self.sleep_time)
 
-    def fetch_sessions(self):
-        session_ids = list(self.firehose.sessions.keys())
-        for session_id in session_ids:
-            session = self.firehose.sessions.get(session_id)
-            if not session.record:
-                try:
-                    session.driver = Driver.objects.get(name=session.driver)
-                    session.game = Game.objects.get(name=session.game_name)
-                    session.session_type = SessionType.objects.get(type=session.session_type)
-                    session.car, created = session.game.cars.get_or_create(name=session.car)
-                    session.car.car_class, created = session.game.car_classes.get_or_create(name=session.car_class)
-                    session.track, created = session.game.tracks.get_or_create(name=session.track)
-                    session.record = session.driver.sessions.filter(
-                        session_id=session.session_id,
-                        session_type=session.session_type,
-                        game=session.game,
-                        car=session.car,
-                        track=session.track,
-                    ).first() or Session(
-                        session_id=session.session_id,
-                        session_type=session.session_type,
-                        game=session.game,
-                        car=session.car,
-                        track=session.track,
-                        start=session.start,
-                        end=session.end,
-                    )
-                    logging.debug(f"{session.session_id}: Fetched session {session_id}")
-                except Exception as e:
-                    # TODO add error to session to expire
-                    logging.error(f"{session.session_id}: Error fetching session {session_id}: {e}")
-                    continue
+    # def fetch_sessions(self):
+    #     session_ids = list(self.firehose.sessions.keys())
+    #     for session_id in session_ids:
+    #         session = self.firehose.sessions.get(session_id)
+    #         if not session.record:
+    #             try:
+    #                 session.driver = Driver.objects.get(name=session.driver)
+    #                 session.game = Game.objects.get(name=session.game_name)
+    #                 session.session_type = SessionType.objects.get(type=session.session_type)
+    #                 session.car, created = session.game.cars.get_or_create(name=session.car)
+    #                 session.car.car_class, created = session.game.car_classes.get_or_create(name=session.car_class)
+    #                 session.track, created = session.game.tracks.get_or_create(name=session.track)
+    #                 session.record = session.driver.sessions.filter(
+    #                     session_id=session.session_id,
+    #                     session_type=session.session_type,
+    #                     game=session.game,
+    #                     car=session.car,
+    #                     track=session.track,
+    #                 ).first() or Session(
+    #                     session_id=session.session_id,
+    #                     session_type=session.session_type,
+    #                     game=session.game,
+    #                     car=session.car,
+    #                     track=session.track,
+    #                     start=session.start,
+    #                     end=session.end,
+    #                 )
+    #                 logging.debug(f"{session.session_id}: Fetched session {session_id}")
+    #             except Exception as e:
+    #                 # TODO add error to session to expire
+    #                 logging.error(f"{session.session_id}: Error fetching session {session_id}: {e}")
+    #                 continue
 
     def save_sessions(self):
         session_ids = list(self.firehose.sessions.keys())
@@ -85,14 +84,11 @@ class SessionSaver:
                     (
                         session.record,
                         created,
-                    ) = session.driver.sessions.get_or_create(
-                        session_id=session.session_id,
-                        session_type=session.session_type,
-                        game=session.game,
-                        car=session.car,
-                        track=session.track,
-                        defaults={"start": session.start, "end": session.end},
-                    )
+                    ) = session.driver.sessions.get_or_create(session_id=session.session_id, session_type=session.session_type, game=session.game)
+                    session.record.car = session.car
+                    session.record.track = session.track
+                    session.record.start = session.start
+                    session.record.save_dirty_fields()
                     logging.debug(f"{session.session_id}: Saving session {session_id}")
                 except Exception as e:
                     # TODO add error to session to expire
@@ -151,5 +147,5 @@ class SessionSaver:
                             track.length = lap_length
                             track.save()
 
-    def run(self):
-        self.save_sessions_loop()
+    # def run(self):
+    #     self.save_sessions_loop()
