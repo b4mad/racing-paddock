@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from django.core.management.base import BaseCommand
+from django.db.models import Prefetch, Q
 
 from telemetry.influx import Influx
 from telemetry.models import FastLap, Lap, Session
@@ -71,6 +72,12 @@ class Command(BaseCommand):
             action="store_true",
         )
 
+        parser.add_argument(
+            "--fix-session-car-track",
+            help="fix sessions missing car or track by using data from first lap",
+            action="store_true",
+        )
+
     def handle(self, *args, **options):
         if options["delete_influx"]:
             self.influx = Influx()
@@ -87,6 +94,8 @@ class Command(BaseCommand):
             self.dump_session()
         elif options["fix_cars"]:
             self.fix_cars()
+        elif options["fix_session_car_track"]:
+            self.fix_session_car_track()
 
     def fix_cars(self):
         from django.db.models import Count
@@ -132,6 +141,38 @@ class Command(BaseCommand):
         #         car.delete()
         # else:
         #     print("\nNo cars without associated sessions found.")
+
+    def fix_session_car_track(self):
+        """
+        Find sessions missing car or track and set them from the first lap's data.
+        Process in batches to handle large numbers of sessions efficiently.
+        """
+
+        batch_size = 1000
+        sessions = Session.objects.filter(Q(car__isnull=True) | Q(track__isnull=True)).prefetch_related(Prefetch("laps", queryset=Lap.objects.order_by("number")))
+
+        total = sessions.count()
+        print(f"Found {total} sessions with missing car or track")
+
+        processed = 0
+        for session in sessions.iterator(chunk_size=batch_size):
+            first_lap = session.laps.first()
+            if first_lap:
+                updated = False
+                if not session.car and first_lap.car:
+                    session.car = first_lap.car
+                    updated = True
+                if not session.track and first_lap.track:
+                    session.track = first_lap.track
+                    updated = True
+
+                if updated:
+                    session.save()
+                    processed += 1
+                    if processed % 100 == 0:
+                        print(f"Processed {processed}/{total} sessions")
+
+        print(f"Updated {processed} sessions with car/track data from their laps")
 
     def dump_session(self):
         # TODO: Revisit this method. The Telemetry model is not defined.

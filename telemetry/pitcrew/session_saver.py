@@ -85,6 +85,8 @@ class SessionSaver:
                         session_id=session.session_id,
                         session_type=session.session_type,
                         game=session.game,
+                        car=session.car,
+                        track=session.track,
                         defaults={"start": session.start, "end": session.end},
                     )
                     logging.debug(f"{session.session_id}: Saving session {session_id}")
@@ -113,9 +115,7 @@ class SessionSaver:
                     #     continue
 
                     try:
-                        lap_record, created = session.record.laps.get_or_create(
-                            number=lap.number, car=session.car, track=track
-                        )
+                        lap_record, created = session.record.laps.get_or_create(number=lap.number, car=session.car, track=track)
                         if created:
                             logging.info(f"{session.session_id}: Created lap {lap_record}")
                         else:
@@ -143,10 +143,7 @@ class SessionSaver:
                     if lap_length > track.length:
                         track.refresh_from_db()
                         if lap_length > track.length:
-                            logging.info(
-                                f"{session.session_id}: updating {track.name} "
-                                + f"length from {track.length} to {lap_length}"
-                            )
+                            logging.info(f"{session.session_id}: updating {track.name} " + f"length from {track.length} to {lap_length}")
                             track.length = lap_length
                             track.save()
 
