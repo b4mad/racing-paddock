@@ -97,7 +97,7 @@ class KubeCrew:
     def get_all_coaches(self) -> list[str]:
         namespace = self.namespace
         v1 = client.AppsV1Api()
-        label_selector = "pitcrew.b4mad.racing/component: pitcrew"
+        label_selector = "pitcrew.b4mad.racing/component=pitcrew"
 
         try:
             api_response = v1.list_namespaced_deployment(namespace=namespace, label_selector=label_selector)
