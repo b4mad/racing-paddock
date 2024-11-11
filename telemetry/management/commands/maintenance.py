@@ -2,7 +2,7 @@ import datetime
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db.models import Prefetch, Q
+from django.db.models import F, Prefetch, Q
 
 from telemetry.influx import Influx
 from telemetry.models import FastLap, Lap, Session
@@ -17,68 +17,71 @@ class Command(BaseCommand):
         parser.add_argument(
             "-d",
             "--delete-influx",
-            help="delete old influx data",
+            help="Delete old telemetry data from InfluxDB within the specified date range",
             action="store_true",
         )
 
         parser.add_argument(
             "--delete-sessions",
-            help="delete sessions",
+            help="Delete all sessions from the database (use with caution)",
             action="store_true",
         )
 
         parser.add_argument(
             "-s",
             "--start",
-            help="start date for deletion",
+            help="Start date for deletion in YYYY-MM-DD format",
             type=str,
             default=None,
         )
         parser.add_argument(
             "-e",
             "--end",
-            help="end date for deletion",
+            help="End date for deletion in YYYY-MM-DD format",
             type=str,
             default=None,
         )
 
         parser.add_argument(
             "--fix-rbr-sessions",
-            help="fix data",
+            help="Fix Richard Burns Rally sessions with incorrect end times",
             action="store_true",
         )
 
         parser.add_argument(
             "--fix-fastlaps",
-            help="fix data",
+            help="Clean up orphaned FastLap records that have no associated Laps",
             action="store_true",
         )
 
         parser.add_argument(
             "--fix-fastlaps-data",
-            help="fix fastlaps data",
+            help="Validate and clean up FastLap data structures and segments",
             action="store_true",
         )
 
         parser.add_argument(
             "--dump-session",
-            help="dump session",
+            help="Debug utility to dump session telemetry data",
             action="store_true",
         )
 
         parser.add_argument(
             "--fix-cars",
-            help="check for cars with duplicate names within the same game",
+            help="Identify and resolve duplicate car names within the same game",
             action="store_true",
         )
 
         parser.add_argument(
             "--fix-session-car-track",
-            help="fix sessions missing car or track by using data from first lap",
+            help="Repair sessions with missing car/track info by using data from their first lap",
             action="store_true",
         )
 
     def handle(self, *args, **options):
+        """
+        Main command handler that routes to specific maintenance tasks based on command line arguments.
+        """
         if options["delete_influx"]:
             self.influx = Influx()
             self.delete_influx(options["start"], options["end"])
@@ -175,6 +178,10 @@ class Command(BaseCommand):
         print(f"Updated {processed} sessions with car/track data from their laps")
 
     def dump_session(self):
+        """
+        Debug utility to dump session telemetry data.
+        Currently disabled - needs implementation with proper Telemetry model.
+        """
         # TODO: Revisit this method. The Telemetry model is not defined.
         # Uncomment and fix the code below once the Telemetry model is available.
         # session_id = "1689266594"
@@ -242,25 +249,46 @@ class Command(BaseCommand):
                     break
 
     def fix_rbr_sessions(self):
-        # get all sessions for Richard Burns Rally
-        sessions = Session.objects.filter(game__name="Richard Burns Rally")
-        for session in sessions:
-            # get all laps for this session
-            laps = session.laps.all()
-            # iterate over all laps
-            for lap in laps:
-                print(f"fixing lap {lap.id} end: {lap.end}")
-                # set the end time of the lap to the start + the lap time
-                lap.end = lap.start + datetime.timedelta(seconds=lap.time + 60)
-                print(f"--> {lap.end}")
-                lap.number = 0
-                # save the lap
-                lap.save()
+        """Fix Richard Burns Rally laps where end time equals start time."""
+        batch_size = 100
+
+        # Get all RBR laps where end equals start
+        laps = Lap.objects.filter(session__game__name="Richard Burns Rally", end=F("start"))
+
+        total_laps = laps.count()
+        logging.info(f"Found {total_laps} RBR laps to fix")
+
+        processed = 0
+        for lap in laps.iterator(chunk_size=batch_size):
+            # Set end time to start + lap time + 60 second buffer
+            lap.end = lap.start + datetime.timedelta(seconds=lap.time + 60)
+            lap.number = 0
+            lap.save()
+
+            processed += 1
+            if processed % batch_size == 0:
+                logging.info(f"Processed {processed}/{total_laps} laps")
+
+        logging.info(f"Completed fixing {processed} RBR laps")
 
     def delete_sessions(self, start, end):
+        """
+        Delete all sessions from the database.
+
+        Args:
+            start: Start date (unused)
+            end: End date (unused)
+        """
         Session.objects.all().delete()
 
     def delete_influx(self, start, end):
+        """
+        Delete telemetry data from InfluxDB within a specified date range.
+
+        Args:
+            start (str): Start date in YYYY-MM-DD format. Defaults to 30 days ago if not specified.
+            end (str): End date in YYYY-MM-DD format. Defaults to start + 1 day if not specified.
+        """
         if start:
             start = datetime.datetime.strptime(start, "%Y-%m-%d")
         else:
