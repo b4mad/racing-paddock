@@ -69,6 +69,7 @@ class SessionRbr(Session):
             if distance > self.current_lap.length:
                 self.current_lap.length = distance
             self.current_lap.time = lap_time
+            self.end = now
 
         self.current_lap.touch(now)
         # at the end of the session, lap_time stops, but distance keeps increasing
