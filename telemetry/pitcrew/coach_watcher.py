@@ -2,14 +2,13 @@ import logging
 import threading
 import time
 
-from telemetry.models import Driver
-
 from .active_drivers import ActiveDrivers
 
 # from .coach import Coach as PitCrewCoach
 # from .coach_app import CoachApp
 # from .coach_copilots import CoachCopilots
 from .coach_copilots_no_history import CoachCopilotsNoHistory
+
 # from .history import History
 from .kube_crew import KubeCrew
 from .mqtt import Mqtt
@@ -32,12 +31,13 @@ class CoachWatcher:
         return self._stop_event.is_set()
 
     def drivers(self):
-        drivers = set()
-        for session in self.firehose.sessions.values():
-            # check if session.driver is a Driver object
-            if isinstance(session.driver, Driver):
-                drivers.add(session.driver)
-        return drivers
+        return self.firehose.drivers()
+        # drivers = set()
+        # for session in self.firehose.sessions.values():
+        #     # check if session.driver is a Driver object
+        #     if isinstance(session.driver, Driver):
+        #         drivers.add(session.driver)
+        # return drivers
 
     def watch_coaches(self):
         self.ready = True
@@ -49,7 +49,7 @@ class CoachWatcher:
             for driver in drivers:
                 self.kube_crew.drivers.add(driver.name)
             self.kube_crew.sync_deployments()
-            self.firehose.do_clear_sessions = True
+            # self.firehose.do_clear_sessions = True
 
     # def start_coach(self, driver_name, coach_model, debug=False):
     #     history = History()

@@ -1,27 +1,25 @@
 import logging
-from typing import Dict, Union
+from typing import Dict
 
 import django.utils.timezone
 
 from telemetry.models import Driver
 
-from .session import Session
-from .session_rbr import SessionRbr
-
 
 class ActiveDrivers:
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, inactive_timeout_seconds=600):
         self.debug = debug
-        self.sessions: Dict[str, Union[Session, SessionRbr]] = {}
-        self.do_clear_sessions = False
+        self.inactive_timeout_seconds = inactive_timeout_seconds
+        self.topics: Dict[str, dict] = {}  # Maps topic to metadata including driver and last_seen
 
     def notify(self, topic, payload, now=None):
         now = now or django.utils.timezone.now()
-        if topic not in self.sessions:
+
+        if topic not in self.topics:
             try:
                 (
                     prefix,
-                    driver,
+                    driver_name,
                     session_id,
                     game,
                     track,
@@ -29,54 +27,38 @@ class ActiveDrivers:
                     session_type,
                 ) = topic.split("/")
             except ValueError:
-                # ignore invalid session
+                # ignore invalid topic
                 return
-
-            if game == "Richard Burns Rally":
-                session = SessionRbr(topic, start=now)
-            else:
-                session = Session(topic, start=now)
 
             try:
-                db_driver, created = Driver.objects.get_or_create(name=driver)
-                session.driver = db_driver
-                session.session_id = session_id
-                logging.debug(f"New session: {topic}")
-                session.game_name = game
-                session.track = track
-                session.car = car
-                session.car_class = payload.get("CarClass", "")
-                session.session_type = session_type
-                self.sessions[topic] = session
+                db_driver, created = Driver.objects.get_or_create(name=driver_name)
+                self.topics[topic] = {"driver": db_driver, "last_seen": now, "session_id": session_id, "game": game, "track": track, "car": car, "car_class": payload.get("CarClass", ""), "session_type": session_type}
+                logging.debug(f"New topic: {topic}")
             except Exception as e:
-                logging.error(f"Error creating driver {driver} - {e}")
+                logging.error(f"Error creating driver {driver_name} - {e}")
                 return
-
-        session = self.sessions[topic]
-        session.end = now
-        if self.do_clear_sessions:
+            # clear inactive topics every time a new topic is added
             self.clear_sessions(now)
+        else:
+            self.topics[topic]["last_seen"] = now
 
-    # TODO: clear sessions every now and then
     def clear_sessions(self, now):
-        """Clear inactive telemetry sessions.
+        """Clear inactive topics.
 
-        Loops through all sessions and deletes:
-        - Any session inactive for more than 10 minutes
-        - Any lap marked for deletion
+        Removes any topic that hasn't received updates for longer than inactive_timeout_seconds
 
         Args:
             now (datetime): The current datetime
-
         """
+        delete_topics = []
+        for topic, metadata in self.topics.items():
+            if (now - metadata["last_seen"]).seconds > self.inactive_timeout_seconds:
+                delete_topics.append(topic)
 
-        delete_sessions = []
-        for topic, session in self.sessions.items():
-            # Delete session without updates for 10 minutes
-            if (now - session.end).seconds > 600:
-                delete_sessions.append(topic)
+        for topic in delete_topics:
+            del self.topics[topic]
+            logging.debug(f"{topic}\n\t deleting inactive topic")
 
-        # Delete all inactive sessions
-        for topic in delete_sessions:
-            del self.sessions[topic]
-            logging.debug(f"{topic}\n\t deleting inactive session")
+    def drivers(self):
+        """Return set of all active drivers"""
+        return {metadata["driver"] for metadata in self.topics.values()}
