@@ -152,6 +152,7 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
             if distance > self.current_lap.length:
                 self.current_lap.length = distance
             self.current_lap.time = lap_time
+            self.current_lap.end = now
 
         # self.current_lap.touch(now)
         # at the end of the session, lap_time stops, but distance keeps increasing
@@ -175,7 +176,7 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
     def analyze_other(self, telemetry, now) -> None:
         try:
             distance = telemetry["DistanceRoundTrack"]
-            current_lap = telemetry["CurrentLap"]
+            current_lap = int(telemetry["CurrentLap"])
             lap_time = telemetry["CurrentLapTime"]
             lap_time_previous = telemetry["LapTimePrevious"]
             lap_is_valid = telemetry["CurrentLapIsValid"]

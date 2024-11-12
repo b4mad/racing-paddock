@@ -36,32 +36,34 @@ class Command(BaseCommand):
         # If the environment variable is set, it overrides the --coach option
         coach_name = options["coach"] if options["coach"] else env_coach
 
-        if options["kube_crew"]:
-            cmd = options["kube_crew"]
-            kube_crew = KubeCrew()
-            if cmd == "start":
-                kube_crew.start_coach(coach_name)
-            elif cmd == "stop":
-                kube_crew.stop_coach(coach_name)
+        # if options["kube_crew"]:
+        #     cmd = options["kube_crew"]
+        #     kube_crew = KubeCrew()
+        #     if cmd == "start":
+        #         kube_crew.start_coach(coach_name)
+        #     elif cmd == "stop":
+        #         kube_crew.stop_coach(coach_name)
 
-            sys.exit(0)
+        #     sys.exit(0)
 
         if coach_name:
+            # Start the coach for the specified driver
             driver, created = Driver.objects.get_or_create(name=coach_name)
             coach, created = Coach.objects.get_or_create(driver=driver)
-            if driver.name == "durandom":
-                crew.coach_watcher.start_coach_no_history(driver.name, coach, debug=True)
-            else:
-                crew.coach_watcher.start_coach(driver.name, coach, debug=True)
+            crew.coach_watcher.start_coach_no_history(driver.name, coach, debug=True)
+            # if driver.name == "durandom":
+            # else:
+            #     crew.coach_watcher.start_coach(driver.name, coach, debug=True)
 
-        elif options["session_saver"]:
-            t = threading.Thread(target=crew.firehose.run)
-            t.name = "firehose"
-            t.start()
-            t = threading.Thread(target=crew.session_saver.run)
-            t.name = "session_saver"
-            t.start()
+        # elif options["session_saver"]:
+        #     t = threading.Thread(target=crew.firehose.run)
+        #     t.name = "firehose"
+        #     t.start()
+        #     t = threading.Thread(target=crew.session_saver.run)
+        #     t.name = "session_saver"
+        #     t.start()
         else:
+            # Start the coach watcher, which will start the coach for each driver
             if not crew.replay and not options["no_save"]:
 
                 def start_flask():

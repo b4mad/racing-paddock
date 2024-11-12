@@ -15,6 +15,7 @@ class PersisterDb:
         self.clear_interval = 60 * 60 * 5  # ticks. telemetry is sent at 60hz, so 60*60*5 = 5 minutes
         self.save_ticks = 0
         self.save_interval = 60 * 60 * 1  # ticks. telemetry is sent at 60hz, so 60*60*1 = 1 minute
+        self.save_interval = 60
 
     def notify(self, topic, payload, now=None):
         now = now or django.utils.timezone.now()
@@ -54,7 +55,7 @@ class PersisterDb:
         session = self.sessions[topic]
         if session:
             session.signal(payload, now)
-        # self.save_sessions(now)
+        self.save_sessions(now)
 
     def get_session(self, session_id, game, track, car, session_type, car_class) -> Optional[Session]:
         try:
