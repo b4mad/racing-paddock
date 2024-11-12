@@ -40,7 +40,7 @@ class Car(TimeStampedModel):
         ordering = [
             "name",
         ]
-        unique_together = ("game", "name")
+        unique_together = ("game", "name", "car_class")
 
     name = models.CharField(max_length=200)
 
