@@ -223,6 +223,7 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
                 self.previous_lap.valid = previous_lap_was_valid
                 self.previous_lap.finished = True
                 logger.debug(f"lap {self.previous_lap.number} time {lap_time_previous} valid {previous_lap_was_valid}")
+                self.previous_lap.save_dirty_fields()
 
         self.previous_distance = distance
         self.previous_lap_time = lap_time
