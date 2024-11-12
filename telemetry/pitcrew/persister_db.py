@@ -15,7 +15,7 @@ class PersisterDb:
         self.clear_interval = 60 * 60 * 5  # ticks. telemetry is sent at 60hz, so 60*60*5 = 5 minutes
         self.save_ticks = 0
         self.save_interval = 60 * 60 * 1  # ticks. telemetry is sent at 60hz, so 60*60*1 = 1 minute
-        self.save_interval = 60
+        # self.save_interval = 60
 
     def notify(self, topic, payload, now=None):
         now = now or django.utils.timezone.now()
@@ -128,8 +128,9 @@ class PersisterDb:
         max_session_age = 60 * 60  # 1 hour
         delete_sessions = []
         for topic, session in self.sessions.items():
-            if (now - session.end).seconds > max_session_age:
-                delete_sessions.append(topic)
+            if session:
+                if (now - session.end).seconds > max_session_age:
+                    delete_sessions.append(topic)
 
             # # Delete any lap marked for deletion
             # for i in range(len(session.laps) - 1, -1, -1):
