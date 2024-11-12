@@ -59,7 +59,6 @@ class PersisterDb:
 
     def get_session(self, session_id, game, track, car, session_type, car_class) -> Optional[Session]:
         try:
-            # TODO dont save again
             r_game = Game.objects.get(name=game)
             logger.debug(f"Car class: {car_class} / Car: {car}")
             if car_class:
