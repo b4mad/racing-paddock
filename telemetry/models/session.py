@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from typing import Optional
 
 import django.utils.timezone
@@ -18,8 +17,8 @@ from .track import Track
 
 class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStampedModel):
     session_id = models.CharField(max_length=200)
-    start = models.DateTimeField(default=datetime.datetime.now)
-    end = models.DateTimeField(default=datetime.datetime.now)
+    start = models.DateTimeField(default=django.utils.timezone.now)
+    end = models.DateTimeField(default=django.utils.timezone.now)
 
     driver = models.ForeignKey("Driver", on_delete=models.CASCADE, related_name="sessions")
     session_type = models.ForeignKey("SessionType", on_delete=models.CASCADE, related_name="sessions")
