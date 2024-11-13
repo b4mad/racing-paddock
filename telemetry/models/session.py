@@ -141,7 +141,7 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
 
         if not self.current_lap:
             # RBR has only one lap
-            self.new_lap(now, current_lap)
+            self.current_lap = self.new_lap(now, current_lap)
             self.previous_tick_time = -1
             self.previous_tick_distance = 100_000_000
             self.counter_time_not_updated = 0
@@ -168,7 +168,8 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
 
         if self.counter_time_not_updated > 10 and self.counter_distance_updated > 10:
             self.current_lap.completed = True
-            self.current_lap.end = now
+            self.current_lap.official_time = lap_time
+            self.current_lap.save_dirty_fields()
 
         self.previous_tick_time = lap_time
         self.previous_tick_distance = distance
@@ -215,13 +216,13 @@ class Session(ExportModelOperationsMixin("session"), DirtyFieldsMixin, TimeStamp
             if distance > self.current_lap.length:
                 self.current_lap.length = distance
             self.current_lap.valid = lap_is_valid
-            # self.current_lap.time = lap_time
+            self.current_lap.time = lap_time
 
         if lap_time_previous != self.previous_lap_time_previous:
             if self.previous_lap:
-                self.previous_lap.time = lap_time_previous
                 self.previous_lap.valid = previous_lap_was_valid
-                self.previous_lap.finished = True
+                self.previous_lap.official_time = lap_time_previous
+                self.previous_lap.completed = True
                 logger.debug(f"lap {self.previous_lap.number} time {lap_time_previous} valid {previous_lap_was_valid}")
                 self.previous_lap.save_dirty_fields()
 

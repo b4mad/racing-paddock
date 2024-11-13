@@ -14,8 +14,8 @@ from rich.table import Column
 
 from telemetry.influx import Influx
 from telemetry.models import Lap
-from telemetry.pitcrew.firehose import Firehose
-from telemetry.pitcrew.session_saver import SessionSaver
+# from telemetry.pitcrew.firehose import Firehose
+# from telemetry.pitcrew.session_saver import SessionSaver
 
 B4MAD_RACING_MQTT_HOST = os.environ.get("MOSQUITTO_MQTT_SERVICE_HOST", "telemetry.b4mad.racing")
 B4MAD_RACING_MQTT_PORT = int(os.environ.get("MOSQUITTO_MQTT_SERVICE_PORT", 31883))
