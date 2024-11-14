@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
+import django.utils.timezone
 from django.db import connection
 from django.db.models import CharField, Count, Max, Q, Value
 from loguru import logger  # noqa F401
@@ -62,7 +63,7 @@ class RacingStats:
             filter["session__driver__name"] = driver
 
         # Calculate the start date based on the range
-        start_date = datetime.now() - timedelta(days=range)
+        start_date = django.utils.timezone.now() - timedelta(days=range)
 
         laps = Lap.objects.filter(**filter)
         # Filter laps based on the end time within the range

@@ -3,17 +3,8 @@ Django settings for paddock project.
 """
 
 import logging
-
 import os
 import sys
-# https://github.com/Delgan/loguru/issues/1012
-# from loguru import logger
-
-# logging_format = (
-#     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-#     "<level>{level: <8}</level> | "
-#     "<cyan>{file.path}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-# )
 
 # logger.remove()
 # logger.add(sys.stderr, format=logging_format)
@@ -24,6 +15,20 @@ import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.threading import ThreadingIntegration
+
+# https://github.com/Delgan/loguru/issues/1012
+# from loguru import logger
+
+# logging_format = (
+#     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+#     "<level>{level: <8}</level> | "
+#     "<cyan>{file.path}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+# )
+
+
+# Convert warnings to exceptions for easier debugging
+# import warnings
+# warnings.filterwarnings("error", category=RuntimeWarning)
 
 env = environ.Env(
     # set casting, default value
@@ -251,13 +256,17 @@ LOGGING = {
             "format": "{asctime} {levelname} {message}",
             "style": "{",
         },
+        "verbose": {
+            "format": "{levelname} {message} {pathname}:{lineno}",
+            "style": "{",
+        },
     },
     "handlers": {
         "console": {
             # logging handler that outputs log messages to terminal
             "class": "logging.StreamHandler",
             "level": "DEBUG",  # message level to be written to console
-            "formatter": "timestamp",
+            "formatter": "verbose",
         },
     },
     "loggers": {
@@ -273,6 +282,11 @@ LOGGING = {
         "django.db": {
             # django also has database level logging
             "level": env("LOGGING_DB_LEVEL")
+        },
+        "py.warnings": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": True,
         },
     },
 }
