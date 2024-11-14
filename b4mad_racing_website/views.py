@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.forms.models import BaseModelForm
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -12,8 +13,6 @@ from django.views.generic.base import RedirectView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
 
 # we need to import these to make sure the apps are registered
 import b4mad_racing_website.fastlap_app  # noqa: F401
@@ -275,15 +274,17 @@ def sessions(request, template_name="sessions.html", **kwargs):
 
     sessions = []
     filter = {}
+
+    # Check existence and 404 if not found
     if game_id:
+        context["game"] = get_object_or_404(Game, pk=game_id)
         filter["game_id"] = game_id
-        context["game"] = Game.objects.get(pk=game_id)
     if car_id:
+        context["car"] = get_object_or_404(Car, pk=car_id)
         filter["laps__car_id"] = car_id
-        context["car"] = Car.objects.get(pk=car_id)
     if track_id:
+        context["track"] = get_object_or_404(Track, pk=track_id)
         filter["laps__track_id"] = track_id
-        context["track"] = Track.objects.get(pk=track_id)
 
     # Calculate the start date based on the range
     start_date = datetime.now() - timedelta(days=365)
