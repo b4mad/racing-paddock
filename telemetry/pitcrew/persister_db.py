@@ -133,13 +133,6 @@ class PersisterDb:
                 if (now - session.end).seconds > max_session_age:
                     delete_sessions.append(topic)
 
-            # # Delete any lap marked for deletion
-            # for i in range(len(session.laps) - 1, -1, -1):
-            #     lap = session.laps[i]
-            #     if lap.get("delete", False):
-            #         logging.debug(f"{topic}\n\t deleting lap {lap['number']}")
-            #         del session.laps[i]
-
         if len(delete_sessions) > 0:
             logger.debug(f"Inactive sessions: {len(delete_sessions)}")
             logger.debug(f"Active sessions: {len(self.sessions) - len(delete_sessions)}")

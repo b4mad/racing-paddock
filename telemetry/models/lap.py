@@ -21,10 +21,10 @@ class Lap(ExportModelOperationsMixin("lap"), DirtyFieldsMixin, TimeStampedModel)
     car = models.ForeignKey("Car", on_delete=models.CASCADE, related_name="laps")
     fast_lap = models.ForeignKey("FastLap", on_delete=models.CASCADE, related_name="laps", null=True)
 
-    class Meta:
-        ordering = [
-            "number",
-        ]
+    # class Meta:
+    #     ordering = [
+    #         "number",
+    #     ]
 
     def __str__(self):
         return f"{self.number}: {self.start.strftime('%H:%M:%S')} - {self.end.strftime('%H:%M:%S')} " + f"{self.time}s {self.length}m valid: {self.valid}"

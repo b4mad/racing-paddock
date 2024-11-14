@@ -4,6 +4,7 @@ from django_admin_relation_links import AdminChangeLinksMixin
 
 from .models import (
     Car,
+    CarClass,
     Coach,
     Driver,
     FastLap,
@@ -12,9 +13,9 @@ from .models import (
     Landmark,
     Lap,
     ReferenceSegment,
+    Segment,
     Session,
     SessionType,
-    Segment,
     SoundClip,
     Track,
     TrackGuide,
@@ -47,6 +48,7 @@ class FastLapSegmentAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
 
 
 class LapAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
+    list_display = ["id", "get_driver", "valid", "completed", "number", "get_game", "track", "car", "time", "official_time"]
     list_display = [
         "id",
         "get_driver",
@@ -71,7 +73,7 @@ class LapAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
         ("car", RelatedDropdownFilter),
         ("track", RelatedDropdownFilter),
     )
-    fields = ["number", "valid", "length", "time", "start", "end"]
+    fields = ["number", "valid", "completed", "length", "time", "official_time", "start", "end", "session", "track", "car", "fast_lap"]
     changelist_links = ["session"]
     change_links = ["session", "track", "car"]
 
@@ -91,7 +93,8 @@ class DriverAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
 
 
 class SessionAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["session_id", "driver", "game", "session_type", "start", "end"]
+    list_display = ["session_id", "driver", "game", "track", "car", "session_type", "start"]
+    fields = ["session_id", "driver", "game", "track", "car", "session_type", "start", "end"]
     changelist_links = ["laps"]
 
 
@@ -101,8 +104,12 @@ class TrackAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
 
 
 class CarAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["name", "game"]
+    list_display = ["name", "game", "car_class"]
     changelist_links = ["laps", "fast_laps"]
+
+
+class CarClassAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
+    list_display = ["name", "game"]
 
 
 class GameAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
@@ -110,19 +117,14 @@ class GameAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
     changelist_links = ["tracks", "cars", "sessions"]
 
 
-# class CoachInline(admin.TabularInline):
-#     model = Coach
-
-
 class CoachAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["driver", "mode", "created", "modified"]
-    fields = ["driver", "error", "status", "mode"]
-
-    # changelist_links = ["se"]
+    list_display = ["driver", "mode", "enabled", "status", "created", "modified"]
+    fields = ["driver", "error", "status", "mode", "enabled", "fast_lap"]
 
 
 class LandmarkAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["name", "kind", "start", "end", "created", "modified"]
+    list_display = ["name", "kind", "track", "start", "end"]
+    fields = ["name", "kind", "track", "start", "end", "is_overtaking_spot", "from_cc"]
 
 
 class TrackGuideAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
@@ -131,25 +133,41 @@ class TrackGuideAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
 
 
 class TrackGuideNoteAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["segment", "priority", "ref_id", "ref_eval", "message", "eval", "notes"]
+    list_display = ["track_guide", "segment", "priority", "message"]
+    fields = ["track_guide", "landmark", "segment", "finish_at", "at", "priority", "ref_id", "ref_eval", "sort_key", "mode", "message", "eval", "notes", "score"]
 
 
 class SegmentAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["lap", "landmark"]
-    # fields = ["type", "history", "telemetry_features"]
+    list_display = ["lap", "landmark", "kind", "braking_point", "apex", "gear"]
+    fields = [
+        "lap",
+        "landmark",
+        "kind",
+        "braking_point",
+        "lift_off_point",
+        "acceleration_point",
+        "brake_pressure",
+        "brake_application_rate",
+        "brake_release_rate",
+        "throttle_lift",
+        "throttle_application_rate",
+        "throttle_release_rate",
+        "apex",
+        "entry_speed",
+        "corner_speed",
+        "exit_speed",
+        "gear",
+        "coasting_time",
+        "launch_wheel_slip_time",
+    ]
+
 
 class ReferenceSegmentAdmin(AdminChangeLinksMixin, admin.ModelAdmin):
-    list_display = ["lap", "landmark", "driver"]
-    # fields = ["type", "history", "telemetry_features"]
-
-
-# class DriverAdmin(admin.ModelAdmin):
-#     model = Driver
-#     display = ('name')
-#     inlines = [CoachInline, ]
+    list_display = ["lap", "landmark", "driver", "track"]
 
 
 admin.site.register(Car, CarAdmin)
+admin.site.register(CarClass, CarClassAdmin)
 admin.site.register(SessionType)
 admin.site.register(Lap, LapAdmin)
 admin.site.register(Track, TrackAdmin)
