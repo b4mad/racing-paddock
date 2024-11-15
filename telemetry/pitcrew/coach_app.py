@@ -16,7 +16,7 @@ class CoachApp(LoggingMixin):
     def __init__(self, history: History, coach_model: Coach, debug=False):
         self.history = history
         self.coach_model = coach_model
-        self.response_topic = f"/coach/{coach_model.driver.name}"
+        self.response_topic = f"coach/{coach_model.driver.name}"
         self.init_variables()
 
     def init_variables(self):

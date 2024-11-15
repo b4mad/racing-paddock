@@ -5,7 +5,7 @@
     "Password": "crewchief",
     "Port": 30883,
     "UpdateRateLimit": 0,
-    "SubscribeTopic": "/coach",
+    "SubscribeTopic": "coach",
     "UseTLS": true,
     "AllowSoundDownload": false,
     "DebugResponse": false,
