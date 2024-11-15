@@ -7,7 +7,7 @@ import pandas as pd
 
 from telemetry.analyzer import Analyzer
 from telemetry.influx import Influx
-from telemetry.models import Lap
+from telemetry.models import Lap, Session
 
 
 class TelemetryLoader:
@@ -72,8 +72,11 @@ class TelemetryLoader:
     def get_lap_df(self, lap_id, measurement="laps_cc", bucket="racing"):
         # make sure the lap_id is an integer
         lap_id = int(lap_id)
-        # fetch the lap from the database
-        lap = Lap.objects.get(id=lap_id)
+        try:
+            # fetch the lap from the database
+            lap = Lap.objects.get(id=lap_id)
+        except Lap.DoesNotExist:
+            return None
 
         influx = Influx()
 
@@ -95,6 +98,13 @@ class TelemetryLoader:
     def get_session_df(self, session_id, measurement="laps_cc", bucket="racing"):
         # make sure the session_id is an integer
         session_id = int(session_id)
+
+        # First check if session exists in database
+        try:
+            Session.objects.get(id=session_id)
+        except Session.DoesNotExist:
+            return None
+
         file_path = f"{self.temp_dir}/session_{session_id}_df.csv.gz"
 
         if self.caching and os.path.exists(file_path):

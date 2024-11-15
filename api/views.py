@@ -13,15 +13,16 @@ class SessionView(View):
     def get(self, request, session_id=0, *args, **kwargs):
         df = self.telemetry_loader.get_session_df(session_id)
 
+        if df is None:
+            return JsonResponse({"error": f"Session with ID {session_id} does not exist"}, status=404)
+
         # Compression:
         # Compress the JSON response. Django can be configured to gzip responses, which can significantly reduce the response size.
         # Make sure your frontend can handle the decompression, which is typically handled automatically by modern browsers.
 
         # render the dataframe as json
         df_json = df.to_json(orient="split", date_format="iso")
-
         df_dict = json.loads(df_json)
-
         return JsonResponse(df_dict, safe=False)
 
 
@@ -32,8 +33,9 @@ class LapView(View):
     def get(self, request, lap_id=0, *args, **kwargs):
         df = self.telemetry_loader.get_lap_df(lap_id)
 
+        if df is None:
+            return JsonResponse({"error": f"Lap with ID {lap_id} does not exist"}, status=404)
+
         df_json = df.to_json(orient="split", date_format="iso")
-
         df_dict = json.loads(df_json)
-
         return JsonResponse(df_dict, safe=False)
