@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 
+# Source common MQTT functions
+. "$(dirname "$0")/mqtt_common.sh"
+
+# Parse command line arguments
+parse_common_args "$@"
+
 set -x
 cd "$(dirname "$0")"
 TIMESTAMP=$(gdate +%s%N)
@@ -28,22 +34,8 @@ T='{"CarModel": "Ferrari 488 GT3 Evo 2020",    "GameName": "iRacing",   "Session
 # TOPIC="crewchief/Jim/1689266594/Automobilista 2/Taruma:Taruma_Internacional/Formula Vee/Qualify"
 # T='{"time": '$TIMESTAMP', "telemetry": {"Clutch":0.0,"Brake":1.0,"Throttle":0.0,"Handbrake":0.0,"SteeringAngle":-0.0103,"Rpms":0.0,"Gear":0,"SpeedMs":0.0,"DistanceRoundTrack":0.0,"WorldPosition_x":37.7886124,"WorldPosition_y":1.904185,"WorldPosition_z":-204.916718,"CurrentLap":1,"CurrentLapTime":-3.0,"LapTimePrevious":-1.0,"CurrentLapIsValid":false,"PreviousLapWasValid":true,"CarClass":"F_VEE"}}'
 
-if [ -z "$MQTT_HOST" ]; then
-  MQTT_HOST=telemetry.b4mad.racing
-fi
-CLIENT_ID=$(hostname)-$$
-
-# default to secure connection
-if [ -z "$SKIP_TLS" ]; then
-  MQTT_PORT=30883
-  TLS_CERT_OPTS="--tls-use-os-certs"
-else
-  MQTT_PORT=31883
-  TLS_CERT_OPTS=""
-fi
-
-USERNAME=crewchief
-PASSWORD=crewchief
+# Setup MQTT connection parameters
+setup_mqtt_connection
 mosquitto_pub -u $USERNAME -P $PASSWORD \
   -t "$TOPIC" \
   -p $MQTT_PORT -h $MQTT_HOST $TLS_CERT_OPTS \
