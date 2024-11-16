@@ -20,15 +20,14 @@
             "justMyCode": false,
             "args": [
                 "analyze",
-                "--streaming",
-                "--session-ids", "1718124083"
+                // "--streaming",
+                // "--session-ids", "1718124083"
                 // "--game", "Assetto Corsa (64 bit)",
-                // "--game",
-                // "Richard Burns Rally",
-                // "--game", "iRacing",
+                // "--game", "Richard Burns Rally",
+                "--game", "iRacing",
                 // "--game", "rFactor 2 (64 bit)",
                 // "--game", "rFactor",
-                // "--track", "algarve:",
+                "--track", "jerez moto",
                 // "--track", "brandshatch grandprix",
                 // "--track", "fiveflags",
                 // "--track", "fuji nochicane",
@@ -42,8 +41,8 @@
                 // "--track", "spa up",
                 // "--track", "Daytona International Speedway",
                 // "--track", "East-West",
-                // "--track", "Outer",
-                // "--car", "Mitsubishi Lancer Evo X R4"
+                // "--track", "The Legend",
+                "--car", "Super Formula SF23 - Honda"
                 // "--car", "Chevrolet Monte Carlo SS"
                 // "--car", "Chevrolet National Impala"
                 // "--car", "Dallara F312 F3"

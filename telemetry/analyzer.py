@@ -63,8 +63,10 @@ class Analyzer:
         one_sector = [
             {"start": 0, "end": max_distance, "length": max_distance},
         ]
-        if len(start) == 0:
-            logging.error(f"No sectors found threshold: {threshold} min_length: {min_length_throttle_below_threshold}")
+        
+        # Return one sector if we don't have valid start/end points
+        if len(start) == 0 or len(end) == 0:
+            logging.error(f"No valid sectors found - threshold: {threshold} min_length: {min_length_throttle_below_threshold}")
             return one_sector
 
         # FIXME: not sure why this is needed

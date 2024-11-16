@@ -14,7 +14,7 @@ T='{"message": "https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Sampl
 T='{"message": "https://gitlab.com/mr_belowski/CrewChiefV4/-/raw/master/CrewChiefV4/sounds/driver_names/Ek.wav?inline=false", "priority": 9}'
 T='{"message": "https://github.com/durandom/racing-assets/raw/main/speech.mp3", "priority": 9}'
 T='{"message": "https://github.com/durandom/racing-assets/raw/main/speech.mp3", "priority": 9, "immediate": true}'
-# T='{"message": "brake normal gear 2", "priority": 9}'
+T='{"message": "brake normal gear 2", "priority": 9, "immediate": true}'
 # T='{"message": "brake normal gear 2", "priority": 9, "distance": 31}'
 
 # Setup MQTT connection parameters
