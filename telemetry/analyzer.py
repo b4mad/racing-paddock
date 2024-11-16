@@ -40,9 +40,7 @@ class Analyzer:
         # print(f"section_lap_time: {section_lap_time}")
         return section_lap_time
 
-    def split_sectors(
-        self, df, threshold=None, min_length_throttle_below_threshold=50, min_distance_between_sectors=50
-    ):
+    def split_sectors(self, df, threshold=None, min_length_throttle_below_threshold=50, min_distance_between_sectors=50):
         logging.debug(f"split_sectors: min_length_throttle_below_threshold: {min_length_throttle_below_threshold}")
         logging.debug(f"split_sectors: min_distance_between_sectors: {min_distance_between_sectors}")
         if threshold is None:
@@ -63,7 +61,7 @@ class Analyzer:
         one_sector = [
             {"start": 0, "end": max_distance, "length": max_distance},
         ]
-        
+
         # Return one sector if we don't have valid start/end points
         if len(start) == 0 or len(end) == 0:
             logging.error(f"No valid sectors found - threshold: {threshold} min_length: {min_length_throttle_below_threshold}")
@@ -115,9 +113,7 @@ class Analyzer:
                 # sector["start"] = prev_sector["start"]
                 prev_sector["end"] = sector["end"]
                 remove_indices.append(i)
-                logging.debug(
-                    f"remove sector {i} - {sector['start']}m " + f"too close to previous sector: {distance_between}"
-                )
+                logging.debug(f"remove sector {i} - {sector['start']}m " + f"too close to previous sector: {distance_between}")
 
         new_sectors = []
         for i, sector in enumerate(sectors):
@@ -174,15 +170,11 @@ class Analyzer:
 
         if end < start:
             # Wrap around the max_distance
-            first_part = track_df[
-                (track_df["DistanceRoundTrack"] >= start) & (track_df["DistanceRoundTrack"] <= max_distance)
-            ]
+            first_part = track_df[(track_df["DistanceRoundTrack"] >= start) & (track_df["DistanceRoundTrack"] <= max_distance)]
             second_part = track_df[(track_df["DistanceRoundTrack"] >= 0) & (track_df["DistanceRoundTrack"] <= end)]
             sector_df = pd.concat([first_part, second_part], axis=0).reset_index(drop=True)
         else:
-            sector_df = track_df[
-                (track_df["DistanceRoundTrack"] >= start) & (track_df["DistanceRoundTrack"] <= end)
-            ].reset_index(drop=True)
+            sector_df = track_df[(track_df["DistanceRoundTrack"] >= start) & (track_df["DistanceRoundTrack"] <= end)].reset_index(drop=True)
 
         return sector_df
 
@@ -253,9 +245,7 @@ class Analyzer:
             window_start = None
 
         if window_start is not None and not below_threshold.empty:
-            window_end = below_threshold[below_threshold["DistanceRoundTrack"] > window_start].iloc[0][
-                "DistanceRoundTrack"
-            ]
+            window_end = below_threshold[below_threshold["DistanceRoundTrack"] > window_start].iloc[0]["DistanceRoundTrack"]
         else:
             window_end = None
 
@@ -357,7 +347,7 @@ class Analyzer:
         # Early return if DataFrame is empty
         if len(lap_df) == 0:
             return lap_df
-            
+
         # Check if DistanceRoundTrack exists
         if "DistanceRoundTrack" not in lap_df.columns:
             logging.error("DistanceRoundTrack column not found in DataFrame")
@@ -406,23 +396,13 @@ class Analyzer:
             # Handle interpolated columns
             if df_interpolate_columns:
                 source_df = lap_df[df_interpolate_columns + ["DistanceRoundTrack"]]
-                interp_df = pd.merge_asof(
-                    result_df,
-                    source_df,
-                    on="DistanceRoundTrack", 
-                    direction="nearest"
-                ).interpolate("linear")
+                interp_df = pd.merge_asof(result_df, source_df, on="DistanceRoundTrack", direction="nearest").interpolate("linear")
                 result_df[df_interpolate_columns] = interp_df[df_interpolate_columns]
 
             # Handle backfill columns
             if df_backfill_columns:
                 source_df = lap_df[df_backfill_columns + ["DistanceRoundTrack"]]
-                backfill_df = pd.merge_asof(
-                    result_df,
-                    source_df,
-                    on="DistanceRoundTrack",
-                    direction="nearest"
-                ).bfill()
+                backfill_df = pd.merge_asof(result_df, source_df, on="DistanceRoundTrack", direction="nearest").bfill()
                 result_df[df_backfill_columns] = backfill_df[df_backfill_columns]
 
             new_df = result_df
@@ -442,18 +422,24 @@ class Analyzer:
         max_distance = int(np.floor(df["DistanceRoundTrack"].max()))
         target_rows = int(max_distance / freq)
 
+        if target_rows <= 0:
+            logging.error(f"Invalid target rows: {target_rows} (max_distance: {max_distance}, freq: {freq})")
+            return input_df
+
         new_distance_round_track = np.linspace(min_distance, max_distance, target_rows)
+        if len(new_distance_round_track) == 0:
+            logging.error("Empty distance track array generated")
+            return input_df
 
         new_distance_round_track = np.round(new_distance_round_track, decimals=2)
-        new_distance_round_track[0] = max(new_distance_round_track[0], min_distance)
-        new_distance_round_track[-1] = min(new_distance_round_track[-1], max_distance)
+        if len(new_distance_round_track) > 0:
+            new_distance_round_track[0] = max(new_distance_round_track[0], min_distance)
+            new_distance_round_track[-1] = min(new_distance_round_track[-1], max_distance)
 
         resampled_df = pd.DataFrame({"DistanceRoundTrack": new_distance_round_track})
 
         for column in columns:
-            interp = interp1d(
-                df["DistanceRoundTrack"], df[column], kind=method, bounds_error=False, fill_value="extrapolate"
-            )
+            interp = interp1d(df["DistanceRoundTrack"], df[column], kind=method, bounds_error=False, fill_value="extrapolate")
             interpolated_values = interp(new_distance_round_track)
 
             if np.issubdtype(df[column].dtype, np.integer):
@@ -495,9 +481,7 @@ class Analyzer:
         lap = lap[["DistanceRoundTrack", "CurrentLapTime", "SpeedMs"]].copy()
         lap_start = lap["CurrentLapTime"].idxmin()
 
-        lap.loc[:lap_start, "CurrentLapTime"] = (
-            lap.loc[:lap_start, "DistanceRoundTrack"] / lap.loc[:lap_start, "SpeedMs"]
-        )
+        lap.loc[:lap_start, "CurrentLapTime"] = lap.loc[:lap_start, "DistanceRoundTrack"] / lap.loc[:lap_start, "SpeedMs"]
         lap = lap[["DistanceRoundTrack", "CurrentLapTime", "SpeedMs"]]
         lap["DistanceRoundTrack"] = lap["DistanceRoundTrack"].round(1)
         lap["CurrentLapTime"] = lap["CurrentLapTime"].round(3)
@@ -617,18 +601,14 @@ class Analyzer:
             if i == len(sectors) - 1:
                 end = int((sectors[0]["DistanceRoundTrack"].iloc[0] - delta - 1) % track_length)
             else:
-                end = int(
-                    (sectors[i + 1]["DistanceRoundTrack"].iloc[0] - delta - 1) % track_length
-                )  # Subtract 11 to make the boundaries exactly one meter apart
+                end = int((sectors[i + 1]["DistanceRoundTrack"].iloc[0] - delta - 1) % track_length)  # Subtract 11 to make the boundaries exactly one meter apart
 
             length = int((end - start) % track_length)
 
             # Merge sectors shorter than the threshold with the previous sector
             if i > 0 and length < min_length:
                 sector_start_end[-1]["end"] = end
-                sector_start_end[-1]["length"] = (
-                    sector_start_end[-1]["end"] - sector_start_end[-1]["start"]
-                ) % track_length
+                sector_start_end[-1]["length"] = (sector_start_end[-1]["end"] - sector_start_end[-1]["start"]) % track_length
             else:
                 sector_start_end.append({"start": start, "end": end, "length": length})
         return sector_start_end
@@ -659,14 +639,10 @@ class Analyzer:
 
         if mode == "min":
             # now find the local minima again
-            real = min_max[column][
-                (min_max[column].shift(1) >= min_max[column]) & (min_max[column].shift(-1) > min_max[column])
-            ]
+            real = min_max[column][(min_max[column].shift(1) >= min_max[column]) & (min_max[column].shift(-1) > min_max[column])]
         else:
             # now find the local maxima again
-            real = min_max[column][
-                (min_max[column].shift(1) <= min_max[column]) & (min_max[column].shift(-1) < min_max[column])
-            ]
+            real = min_max[column][(min_max[column].shift(1) <= min_max[column]) & (min_max[column].shift(-1) < min_max[column])]
 
         return df.loc[real.index]
 
@@ -685,9 +661,7 @@ class Analyzer:
         min_max = pd.concat([min_max, df.iloc[[0, -1]]])
 
         # now find the local minima again
-        real_min = min_max[column][
-            (min_max[column].shift(1) >= min_max[column]) & (min_max[column].shift(-1) > min_max[column])
-        ]
+        real_min = min_max[column][(min_max[column].shift(1) >= min_max[column]) & (min_max[column].shift(-1) > min_max[column])]
         return df.loc[real_min.index]
 
     def extend_lap(self, df, count=2):

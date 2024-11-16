@@ -40,11 +40,18 @@ class FastLapAnalyzer:
                     logging.info("No data found for lap, continuing")
                     continue
             laps_with_telemetry.append(lap)
-            df = self.preprocess(laps[0])
-            lap_telemetry.append(df)
-            counter += 1
-            if max_laps and counter >= max_laps:
-                break
+            try:
+                df = self.preprocess(laps[0])
+                if df is not None and not df.empty:
+                    lap_telemetry.append(df)
+                    counter += 1
+                    if max_laps and counter >= max_laps:
+                        break
+                else:
+                    logging.error("Preprocessing returned empty dataframe")
+            except Exception as e:
+                logging.error(f"Error preprocessing lap: {e}")
+                continue
 
         return lap_telemetry, laps_with_telemetry
 
@@ -89,15 +96,13 @@ class FastLapAnalyzer:
         if df_max is None or df_max.empty:
             logging.error("No valid data for sector extraction")
             return None, None
-            
-        sector_start_end = self.analyzer.split_sectors(
-            df_max, min_distance_between_sectors=35, min_length_throttle_below_threshold=20
-        )
-        
+
+        sector_start_end = self.analyzer.split_sectors(df_max, min_distance_between_sectors=35, min_length_throttle_below_threshold=20)
+
         if not sector_start_end or len(sector_start_end) == 0:
             logging.error("No sectors found during extraction")
             return None, None
-            
+
         return sector_start_end, df_max
 
     def fastest_sector(self, data_frames, start, end):
